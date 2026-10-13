@@ -198,6 +198,11 @@ const pt: Dict = {
   "whatif.rain.control": () => "Fração do excesso evitada:",
   "whatif.chip.measured": () => "Efeito medido",
   "whatif.chip.assumption": () => "Fração: premissa",
+  "whatif.chip.speedMeasured": () => "Velocidade medida",
+  "whatif.chip.literature": () => "Efeito: literatura",
+  "whatif.chip.lever": () => "Redução: premissa",
+  "whatif.speed.title": () => "Velocidade nas avenidas",
+  "whatif.speed.control": () => "Redução da velocidade média:",
   "whatif.unit": () => "sinistros com vítima a menos por ano",
   "whatif.foot": (c) =>
     c.d.whatif
@@ -337,6 +342,11 @@ const en: Dict = {
   "whatif.rain.control": () => "Share of the excess avoided:",
   "whatif.chip.measured": () => "Measured effect",
   "whatif.chip.assumption": () => "Share: assumption",
+  "whatif.chip.speedMeasured": () => "Measured speeds",
+  "whatif.chip.literature": () => "Effect: literature",
+  "whatif.chip.lever": () => "Reduction: assumption",
+  "whatif.speed.title": () => "Speed on the avenues",
+  "whatif.speed.control": () => "Cut in mean speed:",
   "whatif.unit": () => "fewer injury crashes a year",
   "whatif.foot": (c) =>
     c.d.whatif

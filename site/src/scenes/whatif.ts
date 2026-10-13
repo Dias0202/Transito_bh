@@ -24,6 +24,7 @@ const cards: Record<string, Card> = {};
 let bumpIdx = 3;
 let camVariant: "all" | "since2024" = "all";
 let rainShare = 50;
+let speedIdx = 3;
 
 const pct = (v: number, [a, b]: [number, number]) => ((v - a) / (b - a)) * 100;
 
@@ -57,6 +58,19 @@ export function buildWhatIf(w: WhatIf | null) {
   const camHi = Math.max(w.cameras.all.hi, w.cameras.since2024.hi);
   cards.cameras = card("cameras", [Math.floor(camLo / 25) * 25, Math.ceil(camHi / 25) * 25]);
   cards.rain = card("rain", [0, Math.ceil(w.first_rain.excess.hi)]);
+  if (w.speed) {
+    cards.speed = card("speed", [0, Math.ceil(Math.max(...w.speed.curve.map((x) => x.hi)) / 50) * 50]);
+    const sp = document.querySelector<HTMLInputElement>("[data-speed-dv]")!;
+    sp.max = String(w.speed.curve.length - 1);
+    speedIdx = Math.min(speedIdx, w.speed.curve.length - 1);
+    sp.value = String(speedIdx);
+    sp.addEventListener("input", () => {
+      speedIdx = Number(sp.value);
+      update("speed");
+    });
+  } else {
+    document.querySelector<HTMLElement>('[data-whatif="speed"]')!.hidden = true;
+  }
 
   const slider = document.querySelector<HTMLInputElement>("[data-bumps-n]")!;
   slider.max = String(w.bumps.curve.length - 1);
@@ -85,6 +99,7 @@ function bandFor(id: string): Band {
   const w = data!;
   if (id === "bumps") return w.bumps.curve[bumpIdx];
   if (id === "cameras") return w.cameras[camVariant];
+  if (id === "speed") return w.speed!.curve[speedIdx];
   const k = rainShare / 100;
   const e = w.first_rain.excess;
   return { lo: e.lo * k, median: e.median * k, hi: e.hi * k };
@@ -120,7 +135,8 @@ function update(id: string, instant = false) {
   if (id === "bumps") document.querySelector("[data-bumps-n]")?.setAttribute("aria-valuetext", `${data.bumps.curve[bumpIdx].n}`);
   if (id === "rain") document.querySelector("[data-rain-share]")?.setAttribute("aria-valuetext", `${rainShare}%`);
   document.querySelector(`[data-wi-n="${id}"]`)!.textContent =
-    id === "bumps" ? String(data.bumps.curve[bumpIdx].n) : id === "rain" ? `${rainShare}%` : "";
+    id === "bumps" ? String(data.bumps.curve[bumpIdx].n) : id === "rain" ? `${rainShare}%` : id === "speed" ? `${data.speed!.curve[speedIdx].dv} km/h` : "";
+  if (id === "speed") document.querySelector("[data-speed-dv]")?.setAttribute("aria-valuetext", `${data.speed!.curve[speedIdx].dv} km/h`);
   const crossesZero = b.lo < 0 && b.hi > 0;
   // Cameras stay neutral even when the 90% band clears zero: the 95% CI of the effect does not.
   c.root.classList.toggle("is-uncertain", crossesZero || id === "cameras");
@@ -138,6 +154,8 @@ const TEXT = {
           : `Mesmo cenário, com o efeito estimado só desde 2024 (geocodificação consistente): indício de redução, ainda não confirmado.`,
       rain: (w: WhatIf, _i: number, _v: string, p: number) =>
         `Ações nas ~${Math.round(w.first_rain.hours)} horas por ano de primeira chuva após 3 dias secos, eliminando ${p}% do excesso de sinistros que ela causa.`,
+      speed: (w: WhatIf) =>
+        `Nos ${w.speed!.locations} pontos com radar da BHTrans, carros andam em média a ${w.speed!.mean_speed.toFixed(1).replace(".", ",")} km/h (medido) e ocorrem ~${Math.round(w.speed!.base)} sinistros por ano a até 100 m. Resposta dos sinistros: modelo de potência de Nilsson, expoente entre ${String(w.speed!.exponent[0]).replace(".", ",")} e ${String(w.speed!.exponent[1]).replace(".", ",")}.`,
     } as Record<string, (w: WhatIf, i: number, v: string, p: number) => string>,
   },
   en: {
@@ -151,6 +169,8 @@ const TEXT = {
           : `Same scenario, with the effect estimated only since 2024 (consistent geocoding): a hint of reduction, not confirmed.`,
       rain: (w: WhatIf, _i: number, _v: string, p: number) =>
         `Action during the ~${Math.round(w.first_rain.hours)} hours a year of first rain after 3 dry days, removing ${p}% of the extra crashes it causes.`,
+      speed: (w: WhatIf) =>
+        `At the ${w.speed!.locations} BHTrans radar sites, cars average ${w.speed!.mean_speed.toFixed(1)} km/h (measured) and ~${Math.round(w.speed!.base)} crashes a year happen within 100 m. Crash response: Nilsson's Power Model, exponent between ${w.speed!.exponent[0]} and ${w.speed!.exponent[1]}.`,
     } as Record<string, (w: WhatIf, i: number, v: string, p: number) => string>,
   },
 };

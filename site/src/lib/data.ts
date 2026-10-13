@@ -82,6 +82,7 @@ export interface WhatIf {
   bumps: { effect: number; effect_ci: [number, number]; candidates: number; curve: (WIBand & { n: number; base: number })[] };
   cameras: { sites: number; base: number; all: WIBand; since2024: WIBand };
   first_rain: { hours: number; crashes: number; excess: WIBand; rain_hours: number; rain_excess: WIBand };
+  speed: { locations: number; mean_speed: number; base: number; exponent: [number, number]; curve: (WIBand & { dv: number })[] } | null;
 }
 
 export interface Data {

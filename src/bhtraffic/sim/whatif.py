@@ -18,6 +18,10 @@ Scenarios
 2. Speed cameras back at the sites removed in Nov 2025.
 3. First rain after a dry spell: crashes attributable to it per year; a policy
    that removes a share p of that excess avoids p x excess (p is the lever).
+4. Lower mean speed on the avenues with BHTrans radars: baseline speeds measured
+   (radar detections); the crash response is the Power Model (Nilsson 2004:
+   injury crashes ~ (v1/v0)^2), an external assumption, with the exponent drawn
+   uniformly in [1.5, 2.5] for sensitivity; the speed reduction is the lever.
 
     python -m bhtraffic.sim.whatif   # -> processed/sim/whatif.json
 """
@@ -191,6 +195,37 @@ def scenario_first_rain(temporal: dict) -> dict:
             "rain_hours_per_year": float(len(rain) / years), "excess_rain_per_year": summarize(rain_excess)}
 
 
+SPEED_DELTAS = [1, 2, 3, 5, 7, 10]  # km/h reduction of mean car speed
+
+
+def scenario_speed(c: pd.DataFrame, months: int) -> dict | None:
+    import glob
+
+    d = processed_dir("radares")
+    files = [f for f in glob.glob(str(d / "*.parquet")) if not f.endswith("_radars.parquet")]
+    if not files:
+        return None
+    agg = pd.concat([pd.read_parquet(f, columns=["id_endereco", "classe", "n", "vel_mean"]) for f in files])
+    car = agg[(agg["classe"] == "car") & agg["vel_mean"].notna()]
+    v0 = (car["vel_mean"] * car["n"]).groupby(car["id_endereco"]).sum() / car.groupby("id_endereco")["n"].sum()
+    dim = pd.concat([pd.read_parquet(f) for f in glob.glob(str(d / "*_radars.parquet"))]).groupby("id_endereco").agg(lat=("lat", "median"), lon=("lon", "median"))
+    loc = dim.join(v0.rename("v0"), how="inner").dropna()
+    dist = _meters(loc["lat"].to_numpy()[:, None], loc["lon"].to_numpy()[:, None], c["lat"].to_numpy()[None, :], c["lon"].to_numpy()[None, :])
+    # assign each crash to its nearest radar location within 100 m (no double counting)
+    nearest = np.where(dist.min(0) <= 100, dist.argmin(0), -1)
+    base = np.bincount(nearest[nearest >= 0], minlength=len(loc)) / (months / 12)
+    expo = rng.uniform(1.5, 2.5, DRAWS)
+    curve = []
+    for dv in SPEED_DELTAS:
+        ratio = ((loc["v0"].to_numpy()[None, :] - dv) / loc["v0"].to_numpy()[None, :]) ** expo[:, None]
+        counts = rng.poisson(np.repeat(base[None, :], DRAWS, 0))
+        avoided = (counts * (1 - ratio)).sum(1)
+        curve.append({"dv": dv, "avoided": summarize(avoided)})
+    return {"source": "speeds measured (BHTrans radars); crash response = Power Model (Nilsson 2004), assumption; reduction = lever",
+            "locations": int(len(loc)), "mean_speed": float(np.average(loc["v0"], weights=base + 1e-9)),
+            "baseline_per_year": float(base.sum()), "exponent_range": [1.5, 2.5], "curve": curve}
+
+
 def main() -> None:
     c, c_all, sites, sm, bumps, through, months = recent_crashes()
     enf = json.loads((processed_dir("models", "enforcement") / "effects.json").read_text("utf-8"))
@@ -204,6 +239,7 @@ def main() -> None:
             "since_2024": enf["speed"]["twfe_camera_since_2024"],
         }),
         "first_rain": scenario_first_rain(tmp),
+        "speed": scenario_speed(c, months),
     }
     out = processed_dir("sim")
     (out / "whatif.json").write_text(json.dumps(res, indent=2, ensure_ascii=False), "utf-8")

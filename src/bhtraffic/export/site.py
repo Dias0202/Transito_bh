@@ -251,6 +251,9 @@ def whatif() -> dict | None:
         "first_rain": {"hours": round(fr["first_rain_hours_per_year"], 1), "crashes": round(fr["crashes_in_first_rain_hours_per_year"], 1),
                        "excess": r1(fr["excess_first_rain_per_year"]), "rain_hours": round(fr["rain_hours_per_year"]),
                        "rain_excess": r1(fr["excess_rain_per_year"])},
+        "speed": ({"locations": w["speed"]["locations"], "mean_speed": round(w["speed"]["mean_speed"], 1),
+                   "base": round(w["speed"]["baseline_per_year"], 1), "exponent": w["speed"]["exponent_range"],
+                   "curve": [{"dv": x["dv"], **r1(x["avoided"])} for x in w["speed"]["curve"]]} if w.get("speed") else None),
     }
 
 
