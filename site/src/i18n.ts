@@ -92,13 +92,17 @@ const pt: Dict = {
 
   "decade.eyebrow": () => "A década",
   "decade.title": (c) => `Caiu até ${c.f.minYear.year}. Voltou a subir.`,
-  "decade.lead": (c) =>
-    `Em ${c.f.lastYear.year} foram ${c.num(c.f.lastYear.deaths)} mortes no trânsito — ` +
-    (c.f.deathsHighestSince ? `o maior número desde ${c.f.deathsHighestSince}.` : "o maior número da série."),
+  "decade.lead": (c) => {
+    const { lastYear: l, prevYear: p } = c.f;
+    const lead = `Em ${l.year}, ${c.num(l.crashes)} sinistros com vítima e ${c.num(l.deaths)} sinistros com morte`;
+    if (c.f.deathsHighestSince === null) return `${lead} — o maior número da série.`;
+    if (c.f.deathsHighestSince < p.year) return `${lead} — o maior número desde ${c.f.deathsHighestSince}.`;
+    return `${lead}. Em ${p.year} tinham sido ${c.num(p.deaths)}${c.f.prevHighestSince ? `, o maior número desde ${c.f.prevHighestSince}` : ""}.`;
+  },
   "decade.caption": (c) =>
-    `Sinistros com vítima (acima) e mortes (abaixo, em âmbar) por ano, ${c.d.summary.first_year}–${c.d.summary.last_year}. Fonte: BHTrans/PBH.`,
+    `Sinistros com vítima (acima) e sinistros com morte (abaixo, em âmbar) por ano, ${c.d.summary.first_year}–${c.d.summary.last_year}. Fonte: BHTrans/PBH.`,
   "decade.crashes": () => "sinistros",
-  "decade.deaths": () => "mortes",
+  "decade.deaths": () => "sinistros com morte",
 
   "clock.eyebrow": () => "O relógio",
   "clock.title": () => "O trânsito fere na hora de ir e de voltar.",
@@ -122,8 +126,8 @@ const pt: Dict = {
   "who.eyebrow": () => "Quem",
   "who.title": (c) => `${c.pct(c.f.motoShare)} dos sinistros com vítima envolvem uma moto.`,
   "who.lead": (c) =>
-    `Das ${c.num(c.d.summary.deaths_recent)} mortes em ${c.f.years}, motociclistas e pedestres somam ${c.pct(c.f.motoPedShare)}.`,
-  "who.caption": (c) => `Mortes por tipo de usuário da via, ${c.f.years}. Fonte: BHTrans/PBH.`,
+    `Das ${c.num(c.d.summary.deaths_recent)} mortes em ${c.f.peopleYears}, motociclistas e pedestres somam ${c.pct(c.f.motoPedShare)}.`,
+  "who.caption": (c) => `Mortes por tipo de usuário da via, ${c.f.peopleYears} (a base com pessoas envolvidas vai até ${c.d.summary.people_window?.[1] ?? c.d.summary.last_year}). Fonte: BHTrans/PBH.`,
 
   "buses.eyebrow": () => "Agora",
   "buses.title": (c) => (c.d.bus ? `${c.num(c.d.bus.vehicles)} ônibus. Um retrato.` : "Ônibus em tempo real."),
@@ -205,13 +209,17 @@ const en: Dict = {
 
   "decade.eyebrow": () => "The decade",
   "decade.title": (c) => `Down until ${c.f.minYear.year}. Up again since.`,
-  "decade.lead": (c) =>
-    `${c.f.lastYear.year} saw ${c.num(c.f.lastYear.deaths)} traffic deaths — ` +
-    (c.f.deathsHighestSince ? `the highest since ${c.f.deathsHighestSince}.` : "the highest on record."),
+  "decade.lead": (c) => {
+    const { lastYear: l, prevYear: p } = c.f;
+    const lead = `${l.year} saw ${c.num(l.crashes)} injury crashes and ${c.num(l.deaths)} fatal crashes`;
+    if (c.f.deathsHighestSince === null) return `${lead} — the highest on record.`;
+    if (c.f.deathsHighestSince < p.year) return `${lead} — the highest since ${c.f.deathsHighestSince}.`;
+    return `${lead}. ${p.year} had ${c.num(p.deaths)}${c.f.prevHighestSince ? `, the highest since ${c.f.prevHighestSince}` : ""}.`;
+  },
   "decade.caption": (c) =>
-    `Crashes with victims (top) and deaths (bottom, amber) per year, ${c.d.summary.first_year}–${c.d.summary.last_year}. Source: BHTrans/PBH.`,
+    `Crashes with victims (top) and fatal crashes (bottom, amber) per year, ${c.d.summary.first_year}–${c.d.summary.last_year}. Source: BHTrans/PBH.`,
   "decade.crashes": () => "crashes",
-  "decade.deaths": () => "deaths",
+  "decade.deaths": () => "fatal crashes",
 
   "clock.eyebrow": () => "The clock",
   "clock.title": () => "Traffic hurts on the way to work and back.",
@@ -234,8 +242,8 @@ const en: Dict = {
   "who.eyebrow": () => "Who",
   "who.title": (c) => `${c.pct(c.f.motoShare)} of injury crashes involve a motorcycle.`,
   "who.lead": (c) =>
-    `Of the ${c.num(c.d.summary.deaths_recent)} deaths in ${c.f.years}, motorcyclists and pedestrians account for ${c.pct(c.f.motoPedShare)}.`,
-  "who.caption": (c) => `Deaths by road user, ${c.f.years}. Source: BHTrans/PBH.`,
+    `Of the ${c.num(c.d.summary.deaths_recent)} deaths in ${c.f.peopleYears}, motorcyclists and pedestrians account for ${c.pct(c.f.motoPedShare)}.`,
+  "who.caption": (c) => `Deaths by road user, ${c.f.peopleYears} (the dataset with people involved ends in ${c.d.summary.people_window?.[1] ?? c.d.summary.last_year}). Source: BHTrans/PBH.`,
 
   "buses.eyebrow": () => "Right now",
   "buses.title": (c) => (c.d.bus ? `${c.num(c.d.bus.vehicles)} buses. One snapshot.` : "Buses in real time."),
@@ -308,13 +316,13 @@ export interface Front { title: string; body: string; status: string; state: "co
 export const FRONTS: Record<Lang, Front[]> = {
   pt: [
     { title: "Previsão de congestionamento", body: "Redes neurais em grafo espaço-temporais preveem a velocidade por trecho de 15 a 60 minutos à frente, treinadas com tempos de viagem TomTom, radares e GPS dos ônibus.", status: "Coletor pronto", state: "collecting" },
-    { title: "Risco de sinistro", body: "Teste em 2024: 5% dos hexágono-horários concentram 23% dos sinistros; o gradient boosting empatou com um ranking simples (taxa do local × perfil horário), mesmo com a malha viária do OSM. No tempo, chuva soma 14% e a primeira chuva após 3 dias secos, mais 20%; feriados tiram 31%; jogos da Série A não mostraram efeito.", status: "Primeiro resultado", state: "result" },
+    { title: "Risco de sinistro", body: "Teste em 2025: 5% dos hexágono-horários concentram 23% dos sinistros; para escolher onde agir, o gradient boosting empata com um ranking simples (taxa do local × perfil horário). No tempo, chuva soma 14% e a primeira chuva após 3 dias secos, mais 19%; feriados tiram 31%; jogos da Série A não mostraram efeito. Redutores de velocidade: cerca de 21% menos sinistros por perto.", status: "Primeiro resultado", state: "result" },
     { title: "Semáforos adaptativos", body: "Aprendizado por reforço controla semáforos em simulações SUMO de áreas piloto e é comparado a planos de tempo fixo.", status: "Planejado", state: "planned" },
     { title: "Prioridade para ônibus", body: "Cenários de faixa exclusiva e prioridade semafórica, medidos com o GPS real da frota antes e depois.", status: "Planejado", state: "planned" },
   ],
   en: [
     { title: "Congestion forecasting", body: "Spatio-temporal graph neural networks predict per-segment speed 15 to 60 minutes ahead, trained on TomTom travel times, radar counts and bus GPS.", status: "Collector ready", state: "collecting" },
-    { title: "Crash risk", body: "Tested on 2024: 5% of hexagon-hours hold 23% of crashes; gradient boosting tied a simple ranking (place rate × hourly profile), even with OSM road features. Over time, rain adds 14% and the first rain after 3 dry days another 20%; holidays remove 31%; Série A matches showed no effect.", status: "First result", state: "result" },
+    { title: "Crash risk", body: "Tested on 2025: 5% of hexagon-hours hold 23% of crashes; to choose where to act, gradient boosting ties a simple ranking (place rate × hourly profile). Over time, rain adds 14% and the first rain after 3 dry days another 19%; holidays remove 31%; Série A matches showed no effect. Speed bumps: about 21% fewer crashes nearby.", status: "First result", state: "result" },
     { title: "Adaptive traffic signals", body: "Reinforcement learning controls signals in SUMO simulations of pilot areas and is compared with fixed-time plans.", status: "Planned", state: "planned" },
     { title: "Bus priority", body: "Dedicated-lane and signal-priority scenarios, measured with the fleet's real GPS before and after.", status: "Planned", state: "planned" },
   ],
@@ -325,7 +333,7 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
   if (c.lang === "pt") {
     return {
       sources: [
-        `Sinistros com vítima ${s.first_year}–${s.last_year}: BHTrans/PBH, portal dados.pbh.gov.br (ocorrências, veículos e pessoas envolvidas).`,
+        `Sinistros com vítima ${s.first_year}–${s.last_year}: BHTrans/PBH, portal dados.pbh.gov.br — base anual (ocorrências, veículos e pessoas, até ${s.people_window?.[1] ?? s.last_year}) e base mensal de ocorrências georreferenciadas (2016 em diante, completa até ${s.complete_through ?? s.last_year}).`,
         "Posição dos ônibus: PBH, “Tempo Real Ônibus — Coordenada atualizada”.",
         "Hexágonos: sistema H3, resolução 8.",
         "Chuva: INMET, estação automática A521 (Pampulha), dados horários.",
@@ -334,6 +342,7 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
       ],
       limits: [
         "Só entram sinistros com vítima; colisões sem feridos não fazem parte da base.",
+        "A série anual usa sinistros com morte (ao menos uma vítima fatal), não o número de mortos: a base mensal não traz as pessoas envolvidas.",
         `Coordenadas de 2011–2015 usam outro formato e foram convertidas para o UTM dos anos seguintes. ${c.num(s.geocode_placeholders_removed)} registros caíam num mesmo ponto vindo de cinco ou mais regionais — um geocódigo padrão — e foram retirados do mapa.`,
         `${c.pct(s.share_without_coords)} dos sinistros não têm coordenada válida e ficam fora do mapa, mas contam nos totais.`,
         "Retrato dos ônibus é um instante, não uma média.",
@@ -343,7 +352,7 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
   }
   return {
     sources: [
-      `Injury crashes ${s.first_year}–${s.last_year}: BHTrans/city of Belo Horizonte, dados.pbh.gov.br (crashes, vehicles and people involved).`,
+      `Injury crashes ${s.first_year}–${s.last_year}: BHTrans/city of Belo Horizonte, dados.pbh.gov.br — yearly dataset (crashes, vehicles and people, to ${s.people_window?.[1] ?? s.last_year}) and monthly geolocated crash dataset (2016 on, complete to ${s.complete_through ?? s.last_year}).`,
       "Bus positions: city of Belo Horizonte, “Tempo Real Ônibus — Coordenada atualizada”.",
       "Hexagons: H3 grid, resolution 8.",
       "Rain: INMET automatic station A521 (Pampulha), hourly.",
@@ -352,6 +361,7 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
     ],
     limits: [
       "Only crashes with victims are included; property-damage-only collisions are not in the data.",
+      "The yearly series counts fatal crashes (at least one death), not deaths: the monthly dataset has no people involved.",
       `2011–2015 coordinates use another layout and were converted to the later years' UTM grid. ${c.num(s.geocode_placeholders_removed)} records sat on one spot reported from five or more districts — a default geocode — and were removed from the map.`,
       `${c.pct(s.share_without_coords)} of crashes have no valid coordinate; they are off the map but in the totals.`,
       "The bus picture is a single instant, not an average.",

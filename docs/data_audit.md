@@ -36,3 +36,12 @@
 
 - Radares: consistência de `ID_EQP`/endereço entre meses, meses faltantes (ex.: ago/2021 tem só 0,2 GB), classes de veículo.
 - Pesquisa OD RMBH e frota Senatran (download manual).
+
+## Dados até 2026 (adicionados em 2026-10-13)
+
+| Fonte (CKAN PBH) | Cobertura | Observações |
+|---|---|---|
+| `ocorrencia-sinistro-transito-com-vitima` | 2016 → mês corrente (retrato mensal; usamos o mais recente) | Bate **exatamente** com a base anual em 2016–2024 (contagem por ano e 100 % dos boletins). Sem pessoas/veículos. Indicador de fatalidade revisado: 2019 tem 98 sinistros fatais aqui vs 83 na base anual. Último mês costuma vir parcial → usar só meses completos (`last_complete_month`). 7,9 % sem coordenada. |
+| `fiscalizacao-eletronica` | 51 retratos mensais, jun/2022 → set/2026 | **IDs não são estáveis** entre retratos → ponto definido espacialmente (mesma família a < 50 m). Alguns retratos de 2022–23 usam **vírgula** como separador e têm BOM; campos de endereço com quebra de linha entre aspas. **Quebra de cadastro entre out/2025 (669 equipamentos) e nov/2025 (163)**, recomposição ao longo de 2026, muitas vezes em outros locais. Cadastro ≠ operação. |
+| `redutor-de-velocidade` | retrato mensal; datas de implantação 2006–2025 | Geometria LINESTRING (usamos o 1º vértice). Algumas linhas sem data de implantação (só manutenção) → fora do antes/depois. |
+| INMET 2025–2026 | horária até ago/2026 | 2026.zip é atualizado ao longo do ano. |

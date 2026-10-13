@@ -8,8 +8,8 @@ abstract: |
   Este estudo reúne dados abertos da Prefeitura de Belo Horizonte (BHTrans) para descrever onde, quando
   e com quem o trânsito da cidade fere, e propõe quatro frentes de aprendizado de máquina — previsão de
   congestionamento, risco de sinistro, semáforos adaptativos e prioridade para ônibus — a serem validadas
-  com dados reais e simulação. Nesta versão, o diagnóstico cobre 184.350 sinistros com vítima (2011–2024).
-  Resultados de modelos serão incluídos apenas quando existirem.
+  com dados reais e simulação. Nesta versão, o diagnóstico cobre 2011 a julho de 2026 e inclui os primeiros resultados de modelos:
+  risco de sinistro, efeitos de chuva e feriados, e o efeito de radares e redutores de velocidade.
 ---
 
 > **Status:** rascunho. Seções marcadas como *planejado* descrevem método, não resultados.
@@ -17,8 +17,8 @@ abstract: |
 
 # Introdução
 
-Belo Horizonte registrou, em 2024, **13.266 sinistros de trânsito com vítima — 36 por dia** —
-e **159 mortes**, o maior número desde 2014. O objetivo deste trabalho é duplo: (i) construir um diagnóstico
+Belo Horizonte registrou, em 2025, **13.887 sinistros de trânsito com vítima — 38 por dia** —, o maior número
+desde 2014, e **148 sinistros com morte**; em 2024 foram 154, o maior número desde 2014. O objetivo deste trabalho é duplo: (i) construir um diagnóstico
 reprodutível do trânsito da cidade e da Região Metropolitana (RMBH), segmentado por área, horário e tipo
 de usuário da via; e (ii) avaliar, com dados reais e simulação, intervenções baseadas em aprendizado de máquina.
 
@@ -26,13 +26,16 @@ de usuário da via; e (ii) avaliar, com dados reais e simulação, intervençõe
 
 | Fonte | Período | Uso |
 |---|---|---|
-| Sinistros com vítima — ocorrências, veículos e pessoas [@pbh_sinistros] | 2011–2024 | diagnóstico, risco |
+| Sinistros com vítima — ocorrências, veículos e pessoas [@pbh_sinistros] | 2011–2024 | quem, mix veicular |
+| Sinistros com vítima — base mensal georreferenciada (PBH) | 2016–jul/2026 | diagnóstico, risco, intervenções |
+| Fiscalização eletrônica — 51 retratos mensais (PBH) | jun/2022–set/2026 | presença de radares por ponto |
+| Redutores de velocidade (PBH) | implantação 2006–2025 | antes/depois |
 | Contagem volumétrica de radares [@pbh_radares] | 2021–2023 | volume, velocidade, mix veicular |
 | GPS dos ônibus em tempo real (PBH) | coleta própria | velocidade comercial |
 | TomTom Routing | coleta própria (cota grátis) | tempo de viagem por corredor |
 | OpenStreetMap; grade H3 res. 8 [@h3] | snapshot 2026 | malha viária, agregação espacial |
-| INMET, estação A521 Pampulha [@inmet] | 2011–2024, horária | chuva |
-| Feriados nacionais, MG e BH (pacote `holidays` + leis municipais) | 2011–2024 | calendário |
+| INMET, estação A521 Pampulha [@inmet] | 2011–2026, horária | chuva |
+| Feriados nacionais, MG e BH (pacote `holidays` + leis municipais) | 2011–2026 | calendário |
 | Brasileirão Série A [@brasileirao_dataset] | 2012–2024 | jogos em BH |
 
 O tratamento dos dados está documentado em `docs/data_audit.md`. Destacam-se: unificação de nomes de colunas
@@ -43,24 +46,26 @@ do mapa de 6.618 registros com geocódigo padrão (um mesmo ponto atribuído a c
 
 ## A década
 
-![Sinistros com vítima e mortes por ano, 2011–2024.](../figures/yearly_pt.png){#fig-yearly}
+![Sinistros com vítima e sinistros com morte por ano, 2011–2025.](../figures/yearly_pt.png){#fig-yearly}
 
-Os sinistros com vítima caíram de 16.288 (2011) para 10.624 (2020) e voltaram a subir, chegando a 13.266 em 2024.
-As mortes seguiram trajetória parecida, com mínimo de 105 em 2019 e 159 em 2024 (@fig-yearly).
+Os sinistros com vítima caíram de 16.288 (2011) para 10.623 (2020) e voltaram a subir, chegando a 13.887 em 2025.
+Os sinistros com morte (ao menos uma vítima fatal) tiveram mínimo de 98 em 2019, subiram para 154 em 2024 e ficaram
+em 148 em 2025 (@fig-yearly). A série usa sinistros com morte, não número de mortos, porque a base mensal
+(2016 em diante) não traz as pessoas envolvidas; de 2016 a 2024 as duas bases coincidem boletim a boletim.
 
 ## Quando
 
-![Sinistros com vítima por dia da semana e hora, 2020–2024 (n = 61.046). Destaque: pior célula.](../figures/clock_pt.png){#fig-clock}
+![Sinistros com vítima por dia da semana e hora, 2021–2025 (n = 64.308). Destaque: pior célula.](../figures/clock_pt.png){#fig-clock}
 
 De segunda a sexta, os sinistros concentram-se em dois picos — **7h e 18h** —, coincidindo com os deslocamentos
-casa–trabalho. A pior hora da semana é **quarta-feira às 18h**, com 786 sinistros em cinco anos (@fig-clock).
+casa–trabalho. A pior hora da semana é **quarta-feira às 18h**, com 833 sinistros em cinco anos (@fig-clock).
 
 ## Onde
 
-![Sinistros com vítima por regional, 2020–2024.](../figures/regionals_pt.png){#fig-regionals}
+![Sinistros com vítima por regional, 2021–2025.](../figures/regionals_pt.png){#fig-regionals}
 
-A Centro-Sul lidera em número de sinistros (9.014 em 2020–2024), mas a **Pampulha concentra mais sinistros fatais**
-(107 contra 58 da Centro-Sul). O hexágono mais crítico da Pampulha fica sobre a Av. Antônio Carlos (@fig-regionals).
+Em 2021–2025 a **Pampulha passou a liderar** tanto em sinistros com vítima (9.283, contra 8.963 da Centro-Sul)
+quanto em sinistros com morte (111, contra 54 da Centro-Sul). O hexágono mais crítico da Pampulha fica sobre a Av. Antônio Carlos (@fig-regionals).
 
 ## Quem
 
@@ -85,7 +90,7 @@ Estes números serão refeitos com os 31 meses de radares (mar/2021–set/2023) 
 
 # Quando o risco muda: feriados, jogos e chuva
 
-**Desenho.** Uma linha por hora de 2011 a 2024 (122.736 horas, 184.304 sinistros com hora informada).
+**Desenho.** Uma linha por hora de 2011 a julho de 2026 (136.584 horas. 205.994 sinistros com hora informada).
 GLM de Poisson (erros-padrão agrupados por dia, robustos a sobredispersão) com efeitos fixos de dia da semana × hora (168), mês, ano e período de restrições da pandemia
 (18/03/2020–30/06/2021). Cada coeficiente é uma **razão de taxas** (RT) contra horas comparáveis sem o evento.
 Feriados nacionais, de MG e municipais de BH; jogos da Série A nos estádios de BH (2012–2024, 310 partidas, 19 clássicos;
@@ -94,11 +99,11 @@ janela de 2 h antes a 3 h depois do início); chuva horária da estação INMET 
 ![Efeito de eventos e chuva sobre sinistros por hora. Cinza: intervalo inclui 1.](../figures/effects_pt.png){#fig-effects}
 
 - **Chuva:** hora com chuva tem **+13,6 %** de sinistros (RT 1,136; IC 95 % 1,10–1,17). A **primeira chuva após
-  72 h de tempo seco** acrescenta **+20 %** (RT 1,20; 1,09–1,32), ≈ +37 % no total — compatível com a película de óleo
+  72 h de tempo seco** acrescenta **+19 %** (RT 1,19; 1,09–1,30), ≈ +35 % no total — compatível com a película de óleo
   e poeira na pista. Chuva forte (≥ 5 mm) não acrescenta além disso.
-- **Feriados:** −31 % (RT 0,69); Carnaval −44 %; ponto facultativo −15 %; dia seguinte ao feriado −9 %.
+- **Feriados:** −31 % (RT 0,69); Carnaval −44 %; ponto facultativo −15 %; dia seguinte ao feriado −10 %.
   Véspera de feriado não difere de um dia comum.
-- **Jogos:** **nenhum efeito detectável** na cidade (RT 1,02; 0,98–1,06) nem num raio de 1,5 km dos estádios
+- **Jogos** (2012–2024, período coberto pela base de partidas): **nenhum efeito detectável** na cidade (RT 1,02; 0,98–1,06) nem num raio de 1,5 km dos estádios
   (Mineirão RT 1,03; 0,73–1,46; Independência RT 1,00; 0,61–1,63 — intervalos largos: 33 e 20 sinistros em janelas
   de jogo; Arena MRV, aberta em 2023, ainda sem dados suficientes).
 
@@ -106,42 +111,79 @@ janela de 2 h antes a 3 h depois do início); chuva horária da estação INMET 
 o volume dos radares permitirá separar exposição de risco. A base de jogos cobre só a Série A: Mineiro, Copa do Brasil,
 Libertadores e Série B (Cruzeiro em 2020–2022) ficam de fora, o que dilui um eventual efeito.
 
-# Risco de sinistro: primeiro resultado
+# Risco de sinistro
 
 **Pergunta.** Quantos sinistros com vítima esperar em cada hexágono H3 (res. 8, ~0,7 km²) em cada hora da semana?
-**Desenho.** 427 células × 7 dias × 24 h = 71.736 célula-horários. As variáveis usam só anos anteriores ao ano-alvo
-(sem vazamento): treino prevê 2023 com histórico 2018–2022; teste prevê 2024 com histórico 2019–2023.
-Ficam fora sinistros sem coordenada, sem hora ou no ponto padrão de geocodificação (restam 12.081 em 2024).
-**Modelos.** LightGBM com perda de Poisson [@ke2017lightgbm] contra duas linhas de base: (a) média dos últimos 3 anos
-do mesmo célula-horário; (b) taxa anual da célula × perfil horário da cidade.
+**Desenho.** 429 células × 7 dias × 24 h = 72.072 célula-horários. As variáveis usam só anos anteriores ao ano-alvo
+(sem vazamento): treino prevê 2024 com histórico 2019–2023; **teste prevê 2025** com histórico 2020–2024.
+Ficam fora sinistros sem coordenada, sem hora ou no ponto padrão de geocodificação (restam 13.403 em 2025).
+**Modelos.** LightGBM com perda de Poisson [@ke2017lightgbm], com histórico (v0) e com 14 variáveis de malha viária
+do OpenStreetMap escolhidas antes de olhar o teste (v1), contra duas linhas de base: (a) média dos últimos 3 anos do
+mesmo célula-horário; (b) taxa anual da célula × perfil horário da cidade.
 
-![Concentração do risco em 2024: fração dos sinistros que cai nos k % célula-horários de maior risco previsto.](../figures/risk_capture_pt.png){#fig-risk-capture}
+![Concentração do risco em 2025: fração dos sinistros que cai nos k % célula-horários de maior risco previsto.](../figures/risk_capture_pt.png){#fig-risk-capture}
 
-| 2024 (teste) | Top 1 % | Top 5 % | Top 10 % | Deviance de Poisson |
+| 2025 (teste) | Top 1 % | Top 5 % | Top 10 % | Deviance de Poisson |
 |---|---|---|---|---|
-| LightGBM | 7,3 % | 23,0 % | 37,2 % | 0,507 |
-| Taxa da célula × perfil horário | 7,1 % | 22,6 % | 36,8 % | 0,509 |
-| Média 3 anos do célula-horário | 5,5 % | 18,1 % | 29,6 % | 3,14¹ |
+| LightGBM v1 (histórico + OSM) | 6,9 % | 23,2 % | 37,4 % | 0,522 |
+| LightGBM v0 (histórico) | 6,8 % | 23,1 % | 37,5 % | 0,523 |
+| Taxa da célula × perfil horário | 6,8 % | 22,7 % | 37,1 % | 0,537 |
+| Média 3 anos do célula-horário | 5,2 % | 17,7 % | 28,8 % | 3,29¹ |
 
-: Fração dos sinistros de 2024 capturada ao priorizar os k % célula-horários de maior risco previsto. ¹ Inflada por previsões zero em célula-horários sem histórico. {#tbl-risk}
+: Fração dos sinistros de 2025 capturada ao priorizar os k % célula-horários de maior risco previsto. ¹ Inflada por previsões zero em célula-horários sem histórico. {#tbl-risk}
 
 **Resultado.** O risco é concentrado: **5 % dos célula-horários reúnem 23 % dos sinistros** (4,6× o acaso),
-10 % reúnem 37 % (@fig-risk-capture). Mas o LightGBM **empata** com a linha de base (b): no *bootstrap* por célula
-(500 réplicas), o IC 95 % da diferença de deviance é [−0,007; +0,002] e o da captura no top 5 % é [−0,2; +0,9] p.p. —
-ambos incluem zero. Com apenas o histórico de sinistros, o risco é quase separável em *onde* × *quando*;
-o SHAP confirma: taxa da célula e perfil horário da cidade dominam (@fig-risk-shap).
+10 % reúnem 37 % (@fig-risk-capture). Em 2025, o LightGBM **ajusta melhor** que a linha de base (b) — IC 95 % da
+diferença de deviance [−0,020; −0,011], *bootstrap* por célula com 500 réplicas —, mas **empata na métrica de
+priorização**: captura no top 5 % [−0,2; +0,9] p.p. Testado antes em 2024, o empate era nas duas métricas.
+A malha do OSM (v1) não acrescenta nada ao histórico (diferença para v0: deviance [−0,002; +0,000], top 5 %
+[−0,3; +0,4] p.p.). O risco é quase separável em *onde* × *quando*; o SHAP confirma: taxa da célula e perfil
+horário dominam (@fig-risk-shap).
 
-![Importância das variáveis (|SHAP| médio, amostra de 5.000 célula-horários de 2024).](../figures/risk_shap_pt.png){#fig-risk-shap}
+![Importância das variáveis (|SHAP| médio, amostra de 5.000 célula-horários de 2025).](../figures/risk_shap_pt.png){#fig-risk-shap}
 
-**Versão v1 (OSM).** Acrescentar 14 variáveis de malha viária do OpenStreetMap (km por classe de via, cruzamentos,
-semáforos, faixas de pedestre, pontos de ônibus, rotatórias, faixas, limite de velocidade, mão única), escolhidas
-antes de olhar 2024, **também empata** (diferença para v0: deviance [−0,0002; +0,0018], top 5 % [−0,3; +0,4] p.p.).
-O histórico da célula já carrega a estrutura viária; o OSM só ajudaria em áreas sem histórico.
+**Implicação.** Para escolher *onde* agir, um ranking transparente (taxa × perfil) basta; o modelo ganha ao estimar
+*quanto* esperar. Ganho real de priorização deve vir de variáveis de **exposição** (volume e velocidade dos radares)
+e de intervenções medidas (próxima seção), não de um modelo maior.
 
-**Implicação.** Para priorizar fiscalização e engenharia hoje, um ranking transparente (taxa × perfil) basta.
-Ganho de ML deve vir de **novas variáveis exógenas** — volume e velocidade dos radares, atraso do TomTom,
-geometria viária do OpenStreetMap —, não de um modelo maior. Próximo passo: repetir com essas variáveis
-e modelar separadamente sinistros com moto e atropelamentos.
+# Radares e redutores: o que mudou perto deles
+
+**Dados.** A PBH publica a localização dos equipamentos de fiscalização eletrônica em retratos mensais
+(51 desde jun/2022) e a data de implantação de cada redutor de velocidade. Equipamentos da mesma família a menos de
+50 m formam um *ponto*; a presença de cada ponto é acompanhada mês a mês. Entre out/2025 e nov/2025 o cadastro caiu
+de 669 para 163 equipamentos (radares de velocidade: 142 → 66) e se recompôs ao longo de 2026, muitas vezes em outros
+locais — padrão compatível com troca de contrato, não confirmada aqui.
+
+**Desenho (fixado antes dos resultados).** Radares: painel ponto × mês (jun/2022–jul/2026), desfecho = sinistros com
+vítima a até 150 m; Poisson com efeito fixo de ponto e de mês (absorve chuva, feriados, tendência da cidade), erros
+agrupados por ponto; o efeito vem dos pontos que ganharam ou perderam equipamento. Estudo de evento da retirada de
+nov/2025 (pontos que perderam o radar × pontos que o mantiveram). Redutores: sinistros a até 100 m nos 12 meses depois
+× 12 meses antes da implantação, cada janela relativa ao total da cidade no mesmo período (razão de razões), com
+*placebo* uma janela antes (24–13 × 12–1 meses antes), para medir a volta à média de quem instala depois de um pico.
+
+![Efeito estimado de radares e redutores sobre sinistros com vítima próximos. Cinza: intervalo inclui 1.](../figures/interventions_pt.png){#fig-interventions}
+
+| Intervenção | Pontos | Efeito (IC 95 %) |
+|---|---|---|
+| Radar de velocidade presente | 144 (116 mudaram) | ×0,99 [0,90–1,09] |
+| Retirada de radares em nov/2025 (DiD) | 72 perderam × 29 mantiveram | ×1,00 [0,80–1,24] |
+| Detector de avanço de sinal presente | 123 | ×1,05 [0,97–1,14] |
+| Redutor: depois × antes | 2.618 (2013–2025) | ×0,82 [0,77–0,87] |
+| Redutor: placebo (antes × mais antes) | | ×1,04 [0,99–1,09] |
+| **Redutor, líquido do placebo** | | **×0,79 [0,72–0,86]** |
+
+: Efeito sobre sinistros com vítima nas proximidades (radares 150 m; redutores 100 m), jun/2022–jul/2026 (radares) e 2012–jul/2026 (redutores). {#tbl-enf}
+
+**Resultado.** Os **redutores de velocidade** estão associados a **cerca de 21 % menos sinistros com vítima** a até
+100 m (@fig-interventions), e o placebo mostra só um aumento pequeno e não significativo antes da instalação — a
+queda não é explicada por volta à média. Para **radares de velocidade** e **detectores de avanço de sinal**, o efeito
+não se distingue de zero na escala de 150 m; a retirada em massa de nov/2025 também não mostrou piora detectável em
+9 meses. Esta última leitura é **frágil**: o estudo de evento rejeita tendências paralelas antes da retirada
+(p = 0,015), e o cadastro mostra onde o equipamento está registrado, não se estava multando.
+
+**Cautela.** Ausência de efeito detectável não é prova de ausência de efeito: radares agem sobre velocidade em trechos
+longos e sobre gravidade (não só número) dos sinistros, e o raio de 150 m pode não capturar isso. A velocidade medida
+pelos radares da BHTrans (em processamento) permitirá testar o efeito sobre a velocidade diretamente.
 
 # Métodos de aprendizado de máquina (planejado)
 
@@ -167,7 +209,9 @@ política em BH, alimentada pela Pesquisa Origem-Destino da RMBH.
 - As contagens de radares terminam em set/2023 e têm meses incompletos.
 - Os dados de tempo de viagem dependem da coleta própria, iniciada em 2026; 5 dos 18 corredores TomTom têm rota
   1,7–2,2× a linha de referência (possível desvio do eixo) e estão em revisão.
-- Variáveis do OSM são de 2026, aplicadas a sinistros de 2011–2024.
+- Variáveis do OSM são de 2026, aplicadas a sinistros de 2011–2025.
+- A base mensal (2016 em diante) não traz pessoas nem veículos: análises por tipo de usuário param em 2024.
+- O cadastro de fiscalização eletrônica indica onde um equipamento está registrado, não se estava em operação.
 - Jogos: só Série A; chuva: uma estação (Pampulha) para a cidade toda.
 
 # Referências {.unnumbered}

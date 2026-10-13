@@ -2,10 +2,13 @@
 import type { Data } from "./data";
 
 export interface Facts {
-  years: string; // "2020–2024"
+  years: string; // "2021–2025": crash-level metrics
+  peopleYears: string; // "2020–2024": people/vehicle metrics (yearly dataset ends earlier)
   minYear: { year: number; crashes: number };
-  lastYear: { year: number; crashes: number; deaths: number };
+  lastYear: { year: number; crashes: number; deaths: number }; // deaths = fatal crashes
+  prevYear: { year: number; crashes: number; deaths: number };
   deathsHighestSince: number | null; // null => highest of the series
+  prevHighestSince: number | null;
   amPeak: number;
   pmPeak: number;
   worst: { weekday: number; hour: number; n: number };
@@ -18,7 +21,10 @@ export function derive(d: Data): Facts {
   const ys = d.yearly;
   const last = ys[ys.length - 1];
   const minYear = ys.reduce((m, r) => (r.crashes < m.crashes ? r : m), ys[0]);
-  const since = [...ys].reverse().find((r) => r.year < last.year && r.deaths >= last.deaths);
+  const prev = ys[ys.length - 2];
+  const highestSince = (row: { year: number; deaths: number }) =>
+    [...ys].reverse().find((r) => r.year < row.year && r.deaths >= row.deaths)?.year ?? null;
+  const [pa, pb] = d.summary.people_window ?? d.summary.recent_window;
 
   // Weekday (Mon-Fri) profile by hour.
   const wd = Array.from({ length: 24 }, (_, h) =>
@@ -39,9 +45,12 @@ export function derive(d: Data): Facts {
 
   return {
     years: `${a}–${b}`,
+    peopleYears: `${pa}–${pb}`,
     minYear: { year: minYear.year, crashes: minYear.crashes },
     lastYear: last,
-    deathsHighestSince: since ? since.year : null,
+    prevYear: prev,
+    deathsHighestSince: highestSince(last),
+    prevHighestSince: highestSince(prev),
     amPeak: argmax(5, 11),
     pmPeak: argmax(12, 21),
     worst,

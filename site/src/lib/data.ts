@@ -4,6 +4,9 @@ export interface Summary {
   first_year: number;
   last_year: number;
   recent_window: [number, number];
+  people_window?: [number, number];
+  complete_through?: string;
+  fatal_crashes_last_year?: number;
   crashes_total: number;
   crashes_last_year: number;
   crashes_per_day_last_year: number;

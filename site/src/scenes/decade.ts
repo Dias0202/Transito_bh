@@ -65,7 +65,7 @@ export function decadeText(c: Ctx) {
   const first = rows[0];
   const last = rows[rows.length - 1];
   refs.titles[0].textContent = c.lang === "pt" ? "Sinistros com vítima" : "Injury crashes";
-  refs.titles[1].textContent = c.lang === "pt" ? "Mortes" : "Deaths";
+  refs.titles[1].textContent = c.lang === "pt" ? "Sinistros com morte" : "Fatal crashes";
   refs.endLabels[0].textContent = c.num(last.crashes);
   refs.endLabels[1].textContent = c.num(last.deaths);
   refs.startLabels[0].textContent = c.num(first.crashes);

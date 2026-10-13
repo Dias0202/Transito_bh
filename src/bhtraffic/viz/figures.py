@@ -25,6 +25,7 @@ L = {
     "pt": {
         "crashes": "Sinistros com vítima",
         "deaths": "Mortes",
+        "fatal_crashes": "Sinistros com morte",
         "weekdays": ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
         "hour": "Hora",
         "road_users": {"motorcycle": "Motociclistas", "pedestrian": "Pedestres", "car": "Automóveis", "bicycle": "Ciclistas", "truck": "Caminhões", "bus": "Ônibus"},
@@ -42,6 +43,7 @@ L = {
     "en": {
         "crashes": "Injury crashes",
         "deaths": "Deaths",
+        "fatal_crashes": "Fatal crashes",
         "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
         "hour": "Hour",
         "road_users": {"motorcycle": "Motorcyclists", "pedestrian": "Pedestrians", "car": "Car occupants", "bicycle": "Cyclists", "truck": "Truck occupants", "bus": "Bus occupants"},
@@ -87,6 +89,19 @@ def yearly(o: pd.DataFrame, p: pd.DataFrame, lang: str = "pt") -> Path:
         ax.scatter([s.index[-1]], [s.values[-1]], color=color, zorder=3)
         ax.set_title(label, loc="left", fontsize=10, color=color, fontweight="bold")
     a2.set_xticks(crashes.index[::2])
+    return _save(fig, "yearly", lang)
+
+
+def yearly_fatal(oc: pd.DataFrame, lang: str = "pt") -> Path:
+    """Crashes and fatal crashes per year from the combined 2011+ series (one unit throughout)."""
+    g = oc.groupby("year").agg(crashes=("boletim", "size"), fatal=("fatal", "sum"))
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(7, 4.6), sharex=True, gridspec_kw={"height_ratios": [3, 2]})
+    for ax, s_, color, label in ((a1, g["crashes"], TEXT, L[lang]["crashes"]), (a2, g["fatal"], AMBER, L[lang]["fatal_crashes"])):
+        _style(ax)
+        ax.plot(s_.index, s_.values, color=color, lw=2)
+        ax.scatter([s_.index[-1]], [s_.values[-1]], color=color, zorder=3)
+        ax.set_title(label, loc="left", fontsize=10, color=color, fontweight="bold")
+    a2.set_xticks(g.index[::2])
     return _save(fig, "yearly", lang)
 
 
@@ -179,6 +194,62 @@ def effects(irr: list[dict], lang: str = "pt") -> Path:
     ax.set_xlabel(L[lang]["irr_x"], color=MUTED, fontsize=9)
     ax.set_title(L[lang]["irr_title"], loc="left", fontsize=10, color=TEXT)
     return _save(fig, "effects", lang)
+
+
+INTERVENTIONS = {
+    "pt": {
+        "title": "Efeito estimado sobre sinistros com vítima próximos (razão, IC 95%)",
+        "x": "Razão (1 = sem efeito; <1 = menos sinistros)",
+        "rows": [
+            ("speed_twfe", "Radar de velocidade presente (150 m)"),
+            ("speed_removal", "Retirada de radares em nov/2025 (150 m)"),
+            ("red_twfe", "Detector de avanço de sinal presente (150 m)"),
+            ("bump_main", "Redutor instalado: 12 meses depois vs antes (100 m)"),
+            ("bump_placebo", "Placebo: 12 meses antes vs 24–13 antes"),
+            ("bump_net", "Redutor, líquido do placebo"),
+        ],
+    },
+    "en": {
+        "title": "Estimated effect on nearby injury crashes (ratio, 95% CI)",
+        "x": "Ratio (1 = no effect; <1 = fewer crashes)",
+        "rows": [
+            ("speed_twfe", "Speed camera present (150 m)"),
+            ("speed_removal", "Camera removal in Nov 2025 (150 m)"),
+            ("red_twfe", "Red-light camera present (150 m)"),
+            ("bump_main", "Speed bump installed: 12 months after vs before (100 m)"),
+            ("bump_placebo", "Placebo: 12 months before vs 24–13 before"),
+            ("bump_net", "Speed bump, net of placebo"),
+        ],
+    },
+}
+
+
+def interventions(res: dict, lang: str = "pt") -> Path:
+    """Forest plot of bhtraffic.models.enforcement results."""
+    pick = {
+        "speed_twfe": res["speed"]["twfe_camera"],
+        "speed_removal": (res["speed"].get("removal_nov2025") or {}).get("did_post"),
+        "red_twfe": res["red_light"]["twfe_camera"],
+        "bump_main": {"irr": res["bumps"]["main"]["ratio"], **{k: res["bumps"]["main"][k] for k in ("ci_low", "ci_high")}},
+        "bump_placebo": {"irr": res["bumps"]["placebo"]["ratio"], **{k: res["bumps"]["placebo"][k] for k in ("ci_low", "ci_high")}},
+        "bump_net": {"irr": res["bumps"]["main_over_placebo"]["ratio"], **{k: res["bumps"]["main_over_placebo"][k] for k in ("ci_low", "ci_high")}},
+    }
+    rows = [(lab, pick[k]) for k, lab in INTERVENTIONS[lang]["rows"] if pick.get(k)][::-1]
+    fig, ax = plt.subplots(figsize=(7.4, 3.6))
+    _style(ax)
+    for i, (lab, e) in enumerate(rows):
+        sig = e["ci_low"] > 1 or e["ci_high"] < 1
+        color = TEXT if sig else "#A79F94"
+        ax.hlines(i, e["ci_low"], e["ci_high"], color=color, lw=2)
+        ax.scatter([e["irr"]], [i], color=color, zorder=3)
+    ax.axvline(1, color=RULE, lw=1)
+    ax.set_yticks(range(len(rows)), [r[0] for r in rows])
+    ax.set_xscale("log")
+    ax.set_xticks([0.7, 0.8, 0.9, 1, 1.1, 1.25], ["0.7", "0.8", "0.9", "1", "1.1", "1.25"])
+    ax.xaxis.set_minor_formatter(plt.NullFormatter())
+    ax.set_xlabel(INTERVENTIONS[lang]["x"], color=MUTED, fontsize=9)
+    ax.set_title(INTERVENTIONS[lang]["title"], loc="left", fontsize=10, color=TEXT)
+    return _save(fig, "interventions", lang)
 
 
 def all_figures(o: pd.DataFrame, p: pd.DataFrame, recent: tuple[int, int]) -> list[Path]:

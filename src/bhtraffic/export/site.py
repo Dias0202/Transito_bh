@@ -34,6 +34,16 @@ def _load() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     return tuple(pd.read_parquet(p) for p in paths)  # type: ignore[return-value]
 
 
+def _load_combined() -> tuple[pd.DataFrame, str]:
+    """Crashes 2011 -> last complete month (ingest.recentes), cut to complete *years*
+    for annual metrics; returns (frame, complete_through)."""
+    d = processed_dir("sinistros")
+    oc = pd.read_parquet(d / "ocorrencias_2011_2026.parquet")
+    through = pd.Timestamp((d / "ocorrencias_2011_2026.complete_through.txt").read_text().strip())
+    last_full = through.year if through.month == 12 else through.year - 1
+    return oc[oc["year"] <= last_full], str(through.date())
+
+
 def _dump(name: str, obj) -> Path:
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"{name}.json"
@@ -42,37 +52,44 @@ def _dump(name: str, obj) -> Path:
     return p
 
 
-def summary(o, v, p) -> dict:
-    last = int(o["year"].max())
-    recent = o[o["year"] > last - RECENT_YEARS]
+def summary(oc, o, v, p, through: str) -> dict:
+    """Crash metrics from the combined series (to the last complete year); people and
+    vehicle metrics from the yearly dataset, which ends in 2024 (`people_window`)."""
+    last = int(oc["year"].max())
+    recent = oc[oc["year"] > last - RECENT_YEARS]
+    plast = int(o["year"].max())
+    precent = o[o["year"] > plast - RECENT_YEARS]
     moto_bol = set(v.loc[v["grupo"] == "motorcycle", "boletim"])
     fatal_p = p[p["fatal"]]
-    fatal_recent = fatal_p[fatal_p["boletim"].isin(recent["boletim"])]
+    fatal_recent = fatal_p[fatal_p["boletim"].isin(precent["boletim"])]
+    days = 366 if last % 4 == 0 else 365
     return {
-        "first_year": int(o["year"].min()),
+        "first_year": int(oc["year"].min()),
         "last_year": last,
+        "complete_through": through,
         "recent_window": [last - RECENT_YEARS + 1, last],
-        "crashes_total": int(len(o)),
-        "crashes_last_year": int((o["year"] == last).sum()),
-        "crashes_per_day_last_year": round(float((o["year"] == last).sum()) / (366 if last % 4 == 0 else 365), 1),
+        "people_window": [plast - RECENT_YEARS + 1, plast],
+        "crashes_total": int(len(oc)),
+        "crashes_last_year": int((oc["year"] == last).sum()),
+        "crashes_per_day_last_year": round(float((oc["year"] == last).sum()) / days, 1),
+        "fatal_crashes_last_year": int(oc.loc[oc["year"] == last, "fatal"].sum()),
         "deaths_total": int(len(fatal_p)),
         "deaths_recent": int(len(fatal_recent)),
-        "share_crashes_with_motorcycle_recent": round(recent["boletim"].isin(moto_bol).mean(), 3),
+        "share_crashes_with_motorcycle_recent": round(precent["boletim"].isin(moto_bol).mean(), 3),
         "share_deaths_motorcycle_recent": round((fatal_recent["grupo_veiculo"] == "motorcycle").mean(), 3),
         "share_deaths_pedestrian_recent": round(fatal_recent["pedestre"].fillna(False).astype(bool).mean(), 3),
-        "geocode_placeholders_removed": int(o["coord_placeholder"].sum()),
-        "share_without_coords": round(float(o["lat"].isna().mean()), 3),
-        "share_hour_informed": round(float(o["hour"].notna().mean()), 3),
+        "geocode_placeholders_removed": int(oc["coord_placeholder"].sum()),
+        "share_without_coords": round(float(oc["lat"].isna().mean()), 3),
+        "share_hour_informed": round(float(oc["hour"].notna().mean()), 3),
     }
 
 
-def yearly(o, p) -> list[dict]:
-    deaths = p[p["fatal"]].merge(o[["boletim", "year"]], on="boletim").groupby("year").size()
-    crashes = o.groupby("year").size()
-    return [
-        {"year": int(y), "crashes": int(crashes[y]), "deaths": int(deaths.get(y, 0))}
-        for y in crashes.index
-    ]
+def yearly(oc) -> list[dict]:
+    """Crashes and fatal crashes (crashes with at least one death) per year. Fatal
+    *crashes* rather than deaths: the monthly dataset has no people, and one unit
+    must run through the whole series."""
+    g = oc.groupby("year").agg(crashes=("boletim", "size"), deaths=("fatal", "sum"))
+    return [{"year": int(y), "crashes": int(r.crashes), "deaths": int(r.deaths)} for y, r in g.iterrows()]
 
 
 def clock(o) -> dict:
@@ -186,10 +203,13 @@ def effects() -> dict | None:
 def risk() -> dict | None:
     """Capture curve on the 2024 test year from bhtraffic.models.risk."""
     d = processed_dir("models", "risk")
-    m, pr = d / "metrics.json", d / "predictions_2024.parquet"
-    if not (m.exists() and pr.exists()):
+    m = d / "metrics.json"
+    if not m.exists():
         return None
     met = json.loads(m.read_text("utf-8"))
+    pr = d / f"predictions_{met['test_year']}.parquet"
+    if not pr.exists():
+        return None
     pred = pd.read_parquet(pr)
     y = pred["y"].to_numpy()
     ks = [i / 200 for i in range(0, 61)]  # 0..30% in 0.5 pp steps
@@ -211,12 +231,13 @@ def risk() -> dict | None:
 
 def main() -> int:
     o, v, p = _load()
+    oc, through = _load_combined()
     written = [
-        _dump("summary", summary(o, v, p)),
-        _dump("yearly", yearly(o, p)),
-        _dump("clock", clock(o)),
-        _dump("hexes", hexes(o)),
-        _dump("regionals", regionals(o)),
+        _dump("summary", summary(oc, o, v, p, through)),
+        _dump("yearly", yearly(oc)),
+        _dump("clock", clock(oc)),
+        _dump("hexes", hexes(oc)),
+        _dump("regionals", regionals(oc)),
         _dump("vehicles", vehicles(o, v, p)),
     ]
     for name, fn in (("effects", effects), ("risk", risk)):
