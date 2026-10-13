@@ -86,19 +86,21 @@ Estes números serão refeitos com os 31 meses de radares (mar/2021–set/2023) 
 # Quando o risco muda: feriados, jogos e chuva
 
 **Desenho.** Uma linha por hora de 2011 a 2024 (122.736 horas, 184.304 sinistros com hora informada).
-GLM quase-Poisson com efeitos fixos de dia da semana × hora (168), mês, ano e período de restrições da pandemia
+GLM de Poisson (erros-padrão agrupados por dia, robustos a sobredispersão) com efeitos fixos de dia da semana × hora (168), mês, ano e período de restrições da pandemia
 (18/03/2020–30/06/2021). Cada coeficiente é uma **razão de taxas** (RT) contra horas comparáveis sem o evento.
-Feriados nacionais, de MG e municipais de BH; jogos da Série A nos estádios de BH (2012–2024, 578 partidas;
-janela de 2 h antes a 3 h depois do início); chuva horária da estação INMET A521 (Pampulha).
+Feriados nacionais, de MG e municipais de BH; jogos da Série A nos estádios de BH (2012–2024, 310 partidas, 19 clássicos;
+janela de 2 h antes a 3 h depois do início); chuva horária da estação INMET A521 (Pampulha), alinhada à hora em que caiu (o INMET registra o total da hora que termina no horário).
 
 ![Efeito de eventos e chuva sobre sinistros por hora. Cinza: intervalo inclui 1.](../figures/effects_pt.png){#fig-effects}
 
-- **Chuva:** hora com chuva tem **+10,5 %** de sinistros (RT 1,105; IC 95 % 1,08–1,13). A **primeira chuva após
-  72 h de tempo seco** acrescenta **+32 %** (RT 1,32; 1,22–1,44) — compatível com a película de óleo e poeira na pista.
+- **Chuva:** hora com chuva tem **+13,6 %** de sinistros (RT 1,136; IC 95 % 1,10–1,17). A **primeira chuva após
+  72 h de tempo seco** acrescenta **+20 %** (RT 1,20; 1,09–1,32), ≈ +37 % no total — compatível com a película de óleo
+  e poeira na pista. Chuva forte (≥ 5 mm) não acrescenta além disso.
 - **Feriados:** −31 % (RT 0,69); Carnaval −44 %; ponto facultativo −15 %; dia seguinte ao feriado −9 %.
   Véspera de feriado não difere de um dia comum.
 - **Jogos:** **nenhum efeito detectável** na cidade (RT 1,02; 0,98–1,06) nem num raio de 1,5 km dos estádios
-  (Mineirão RT 1,03; 0,72–1,46 — intervalo largo: só 33 sinistros em janelas de jogo).
+  (Mineirão RT 1,03; 0,73–1,46; Independência RT 1,00; 0,61–1,63 — intervalos largos: 33 e 20 sinistros em janelas
+  de jogo; Arena MRV, aberta em 2023, ainda sem dados suficientes).
 
 **Cautela.** Menos sinistros em feriados reflete sobretudo **menos tráfego**, não ruas mais seguras por veículo;
 o volume dos radares permitirá separar exposição de risco. A base de jogos cobre só a Série A: Mineiro, Copa do Brasil,

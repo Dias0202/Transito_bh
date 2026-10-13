@@ -45,8 +45,9 @@ def test_match_window_and_first_rain():
     mat = calendar.matches_table(MATCH_CSV)
     ts = pd.date_range("2023-01-01", "2023-12-31 23:00", freq="h")
     rain = pd.Series(0.0, index=ts)
-    rain["2023-03-20 15:00"] = 3.0  # after weeks of dry hours -> first rain
-    rain["2023-03-20 16:00"] = 1.0  # still raining, no longer "first"
+    # INMET stamps the hour that ENDS at ts: 16:00 = rain during 15:00-16:00.
+    rain["2023-03-20 16:00"] = 3.0  # after weeks of dry hours -> first rain in crash hour 15h
+    rain["2023-03-20 17:00"] = 1.0  # still raining at 16h, no longer "first"
     weather = pd.DataFrame({"ts": ts, "rain_mm": rain.to_numpy()})
     f = temporal.hourly_frame(hol, mat, weather, years=(2023, 2023)).set_index("ts")
     k = pd.Timestamp("2023-03-05 16:00")

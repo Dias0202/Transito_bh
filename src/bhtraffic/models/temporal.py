@@ -3,7 +3,8 @@
 Unit: one row per clock hour, 2011-2024, BRT. Outcome: injury crashes that hour
 (all crashes with a reported time, with or without coordinates).
 
-Effects are estimated with a quasi-Poisson GLM (statsmodels) that controls for
+Effects are estimated with a Poisson GLM (statsmodels, standard errors clustered by
+day, robust to overdispersion) that controls for
 weekday x hour (168 levels), month, year and the pandemic period, so each
 event coefficient is an incidence-rate ratio (IRR): IRR 1.20 = +20% crashes in
 that hour versus a comparable hour without the event.
@@ -84,7 +85,10 @@ def hourly_frame(hol: pd.DataFrame, mat: pd.DataFrame, weather: pd.DataFrame | N
             f.loc[win, "classico"] = 1
 
     if weather is not None:
-        w = weather.assign(ts=weather["ts"].dt.floor("h")).groupby("ts")["rain_mm"].sum(min_count=1)
+        # INMET hourly precipitation is the total of the hour ENDING at the timestamp,
+        # so the value stamped h+1 is the rain that fell during crash hour [h, h+1).
+        w = (weather.assign(ts=weather["ts"].dt.floor("h") - pd.Timedelta(hours=1))
+             .groupby("ts")["rain_mm"].sum(min_count=1))
         f["rain_mm"] = f["ts"].map(w)
         f["rain_missing"] = f["rain_mm"].isna().astype(int)
         r = f["rain_mm"].fillna(0)
@@ -109,7 +113,11 @@ def fit_glm(df: pd.DataFrame, events: list[str]):
 
     formula = "y ~ " + " + ".join(events + ["pandemic", "C(weekday):C(hour)", "C(month)", "C(year)"])
     # Quasi-Poisson: dispersion from Pearson chi2 so CIs account for overdispersion.
-    return smf.glm(formula, data=df, family=sm.families.Poisson()).fit(scale="X2")
+    # Standard errors clustered by calendar day: hours within a day share weather and
+    # traffic conditions, so treating them as independent would overstate precision.
+    groups = pd.factorize(df["date"])[0]
+    return smf.glm(formula, data=df, family=sm.families.Poisson()).fit(
+        cov_type="cluster", cov_kwds={"groups": groups})
 
 
 def irr_table(model, events: list[str]) -> pd.DataFrame:
@@ -144,8 +152,10 @@ def main() -> None:
     events = EVENTS + (WEATHER if weather is not None else [])
     city = fit_glm(df, events)
     out = processed_dir("models", "temporal")
+    in_frame = mat["kickoff"].between(df["ts"].min(), df["ts"].max())
     res = {"city": irr_table(city, events).to_dict("records"), "n_hours": len(df), "crashes": int(df["y"].sum()),
-           "dispersion": float(city.scale)}
+           "matches_in_frame": int(in_frame.sum()), "classicos_in_frame": int(mat.loc[in_frame, "classico"].sum()),
+           "pearson_dispersion": float(city.pearson_chi2 / city.df_resid)}
     res["stadiums"] = {}
     for st in sorted(mat["stadium"].unique()):
         g = stadium_frame(f, crashes, mat, st)

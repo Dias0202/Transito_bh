@@ -85,20 +85,22 @@ in the morning peak, Andradas, Amazonas and Antônio Carlos. These will be recom
 
 # When risk changes: holidays, matches and rain
 
-**Design.** One row per hour, 2011–2024 (122,736 hours, 184,304 crashes with a reported time). Quasi-Poisson GLM with
+**Design.** One row per hour, 2011–2024 (122,736 hours, 184,304 crashes with a reported time). Poisson GLM (standard errors clustered by day, robust to overdispersion) with
 fixed effects for weekday × hour (168), month, year and the pandemic restriction period (2020-03-18 to 2021-06-30).
 Each coefficient is a **rate ratio** (RR) against comparable hours without the event. National, Minas Gerais and BH
-municipal holidays; Série A matches at BH stadiums (2012–2024, 578 matches; window from 2 h before to 3 h after
-kickoff); hourly rain from INMET station A521 (Pampulha).
+municipal holidays; Série A matches at BH stadiums (2012–2024, 310 matches, 19 derbies; window from 2 h before to 3 h after
+kickoff); hourly rain from INMET station A521 (Pampulha), aligned to the hour it fell (INMET records the total of the hour ending at the timestamp).
 
 ![Effect of events and rain on hourly crashes. Grey: interval includes 1.](../figures/effects_en.png){#fig-effects}
 
-- **Rain:** an hour with rain has **+10.5%** crashes (RR 1.105; 95% CI 1.08–1.13). The **first rain after 72 h of dry
-  weather** adds **+32%** (RR 1.32; 1.22–1.44) — consistent with the oil-and-dust film on the road.
+- **Rain:** an hour with rain has **+13.6%** crashes (RR 1.136; 95% CI 1.10–1.17). The **first rain after 72 h of dry
+  weather** adds **+20%** (RR 1.20; 1.09–1.32), ≈ +37% in total — consistent with the oil-and-dust film on the road.
+  Heavy rain (≥ 5 mm) adds nothing beyond that.
 - **Holidays:** −31% (RR 0.69); Carnaval −44%; optional days off −15%; the day after a holiday −9%. Holiday eves do
   not differ from a normal day.
 - **Matches:** **no detectable effect** citywide (RR 1.02; 0.98–1.06) or within 1.5 km of the stadiums (Mineirão
-  RR 1.03; 0.72–1.46 — wide interval: only 33 crashes in match windows).
+  RR 1.03; 0.73–1.46; Independência RR 1.00; 0.61–1.63 — wide intervals: 33 and 20 crashes in match windows;
+  Arena MRV, opened in 2023, does not have enough data yet).
 
 **Caution.** Fewer crashes on holidays mostly reflects **less traffic**, not safer streets per vehicle; radar volumes
 will separate exposure from risk. Match data covers Série A only: the state league, Copa do Brasil, Libertadores and

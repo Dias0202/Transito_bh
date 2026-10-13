@@ -160,7 +160,11 @@ def _lgbm():
     )
 
 
-def fit_eval(crashes: pd.DataFrame | None = None, test_year: int = TEST_YEAR, osm: bool = True) -> Result:
+def fit_eval(crashes: pd.DataFrame | None = None, test_year: int = TEST_YEAR, osm: bool | None = None) -> Result:
+    """osm=None uses OSM features when processed/osm/h3_features.parquet exists (build it with
+    `python -m bhtraffic.geo.osm`), otherwise falls back to v0 and says so in metrics."""
+    if osm is None:
+        osm = (processed_dir("osm") / "h3_features.parquet").exists()
     crashes = load_crashes() if crashes is None else crashes
     cells = sorted(crashes["h3"].unique())
     train = build_panel(crashes, test_year - 1, cells)
