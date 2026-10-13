@@ -12,6 +12,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from bhtraffic.config import BRT, REPO_ROOT, processed_dir
@@ -168,6 +169,46 @@ def bus_snapshot() -> dict | None:
     }
 
 
+def effects() -> dict | None:
+    """Rate ratios from bhtraffic.models.temporal (city-wide GLM)."""
+    f = processed_dir("models", "temporal") / "effects.json"
+    if not f.exists():
+        return None
+    r = json.loads(f.read_text("utf-8"))
+    keep = ["rain_any", "first_rain", "holiday", "carnaval", "optional_day", "day_after_holiday", "match"]
+    rows = {e["event"]: e for e in r["city"]}
+    return {
+        "hours": r["n_hours"], "crashes": r["crashes"], "matches": r["matches_in_frame"],
+        "events": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in rows[e].items() if k != "p"} for e in keep if e in rows],
+    }
+
+
+def risk() -> dict | None:
+    """Capture curve on the 2024 test year from bhtraffic.models.risk."""
+    d = processed_dir("models", "risk")
+    m, pr = d / "metrics.json", d / "predictions_2024.parquet"
+    if not (m.exists() and pr.exists()):
+        return None
+    met = json.loads(m.read_text("utf-8"))
+    pred = pd.read_parquet(pr)
+    y = pred["y"].to_numpy()
+    ks = [i / 200 for i in range(0, 61)]  # 0..30% in 0.5 pp steps
+    rng = np.random.default_rng(0)
+    curves = {}
+    for name in ("model", "cellxprofile"):
+        order = np.lexsort((rng.random(len(y)), -pred[f"pred_{name}"].to_numpy()))
+        cum = np.concatenate([[0], np.cumsum(y[order])]) / y.sum()
+        curves[name] = [round(float(cum[int(k * len(y))]), 4) for k in ks]
+    boot = met.get("model_minus_cellxprofile", {})
+    return {
+        "test_year": met["test_year"], "cells": met["cells"], "slots": met["slots"], "crashes": met["crashes_test"],
+        "k": ks, "curves": curves,
+        "top5": round(met["model"]["capture_top5pct"], 4), "top10": round(met["model"]["capture_top10pct"], 4),
+        "top5_simple": round(met["cellxprofile"]["capture_top5pct"], 4),
+        "tie_ci_top5": [round(x, 4) for x in boot.get("capture_top5pct_diff_ci95", [])],
+    }
+
+
 def main() -> int:
     o, v, p = _load()
     written = [
@@ -178,6 +219,10 @@ def main() -> int:
         _dump("regionals", regionals(o)),
         _dump("vehicles", vehicles(o, v, p)),
     ]
+    for name, fn in (("effects", effects), ("risk", risk)):
+        obj = fn()
+        if obj:
+            written.append(_dump(name, obj))
     snap = bus_snapshot()
     if snap:
         written.append(_dump("bus", snap))

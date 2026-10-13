@@ -175,11 +175,93 @@
 .bar--accent .bar__label, .bar--accent .bar__value { color: var(--accent-text); font-weight: 600; }
 @media (max-width: 560px) { .bar { grid-template-columns: 1fr 3rem; } .bar__label { grid-column: 1 / -1; } }
 
-/* ---------- 6. Buses ---------- */
+/* ---------- 6. Rain / calendar effects ---------- */
+/* One row per event; the dot is a persistent object that travels along a log
+   scale from "1 = typical hour" to its rate ratio. Columns are shared by the
+   scale header, the rows and the axis so everything lines up vertically. */
+.effects, .fx__scale { --cols: minmax(0, 11rem) minmax(0, 1fr) 4rem; }
+.fx__scale {
+  display: grid; grid-template-columns: var(--cols); gap: var(--s-4);
+  margin: 0 0 var(--s-3); font-size: var(--fs-caption); color: var(--fg-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.fx__scaletrack { position: relative; display: flex; justify-content: space-between; }
+.fx__scaletrack > span:nth-child(2) { position: absolute; left: var(--one); transform: translateX(-50%); color: var(--fg); white-space: nowrap; }
+.effects { list-style: none; margin: 0; padding: 0; overflow-x: clip; } /* sliders translate past the track */
+.fx {
+  display: grid; grid-template-columns: var(--cols); gap: var(--s-4); align-items: center;
+  padding: var(--s-3) 0;
+}
+.fx__label {
+  font-size: var(--fs-small); color: var(--fg-muted); opacity: 0.55;
+  transition: opacity var(--dur-standard) var(--ease-out), color var(--dur-standard) var(--ease-out);
+}
+.fx.is-reached .fx__label { opacity: 1; }
+.fx.is-current .fx__label { color: var(--fg); font-weight: 500; }
+.fx__track { position: relative; height: 20px; }
+.fx__track::before { /* the "1" reference line, continuous across rows */
+  content: ""; position: absolute; left: var(--one); top: calc(-1 * var(--s-3)); bottom: calc(-1 * var(--s-3));
+  width: 1px; background: var(--hairline);
+}
+.fx__ci {
+  position: absolute; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px;
+  background: var(--fg-muted); opacity: 0;
+}
+.fx.is-up .fx__ci { background: var(--accent-mark); }
+.fx__slider { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
+.fx__dot {
+  position: absolute; left: 0; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+  border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 2px var(--fg-muted);
+  transition: background-color var(--dur-standard) var(--ease-out), box-shadow var(--dur-standard) var(--ease-out);
+}
+.fx.is-reached .fx__dot { background: var(--fg-muted); }
+.fx.is-up .fx__dot { background: var(--accent-mark); box-shadow: inset 0 0 0 2px var(--accent-mark); }
+.fx.is-down .fx__dot { background: var(--fg); box-shadow: inset 0 0 0 2px var(--fg); }
+.fx__value { text-align: right; font-weight: 600; opacity: 0; }
+.fx.is-up .fx__value { color: var(--accent-text); }
+.fx--axis { padding-top: var(--s-2); }
+.fx--axis .fx__track { height: 1.2em; }
+.fx--axis .fx__track::before { display: none; }
+.fx--axis b {
+  position: absolute; transform: translateX(-50%); font-weight: 400;
+  font-size: var(--fs-caption); color: var(--fg-muted); font-variant-numeric: tabular-nums;
+}
+.rain__cap--after { display: none; }
+@media (max-width: 900px) {
+  .rain__cap { display: none; }
+  .rain__cap--after { display: block; }
+  .fx { padding: var(--s-2) 0; }
+  .fx__track::before { top: calc(-1 * var(--s-2)); bottom: calc(-1 * var(--s-2)); }
+}
+@media (max-width: 560px) {
+  .effects, .fx__scale { --cols: minmax(0, 7rem) minmax(0, 1fr) 3rem; gap: var(--s-3); }
+  .fx__label { font-size: var(--fs-caption); }
+  .fx__scaletrack > span:not(:nth-child(2)) { display: none; }
+}
+
+/* ---------- 7. Risk concentration ---------- */
+.capture { width: 100%; height: auto; overflow: visible; }
+.capture text { fill: var(--fg-muted); font: 500 12px var(--font-body); font-variant-numeric: tabular-nums; }
+.capture .grid { stroke: var(--hairline); stroke-width: 1; opacity: 0.6; }
+.capture .axis { stroke: var(--fg-muted); stroke-width: 1; }
+.capture .curve { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.capture .curve--model { stroke: var(--accent-mark); stroke-width: 3; }
+.capture .curve--simple { stroke: var(--fg); stroke-width: 1.25; }
+.capture .curve--chance { stroke: var(--fg-muted); stroke-width: 1; }
+.capture .guide { stroke: var(--fg-muted); stroke-width: 1; stroke-dasharray: 2 4; }
+.capture .mark__dot { fill: var(--accent-mark); stroke: var(--bg); stroke-width: 2; }
+.capture .mark__label { fill: var(--fg); font: 600 14px var(--font-body); }
+.capture .legend--model { fill: var(--accent-text); font-weight: 600; }
+.note {
+  font-size: var(--fs-small); color: var(--fg-muted); max-width: 46ch;
+  padding-left: var(--s-4); border-left: 2px solid var(--accent-mark);
+}
+
+/* ---------- 8. Buses ---------- */
 .buscanvas { width: 100%; aspect-ratio: 1 / 1; max-height: 78vh; }
 .stamp { color: var(--fg-muted); }
 
-/* ---------- 7. ML fronts ---------- */
+/* ---------- 9. ML fronts ---------- */
 .fronts {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -210,7 +292,7 @@
   .front, .front:nth-child(even) { padding: var(--s-6) 0; border-right: 0; }
 }
 
-/* ---------- 8. Method ---------- */
+/* ---------- 10. Method ---------- */
 .method__grid { display: grid; gap: var(--s-7); }
 .method__cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-8); }
 .method__h { font-size: var(--fs-body); font-family: var(--font-body); font-weight: 600; margin-bottom: var(--s-3); }

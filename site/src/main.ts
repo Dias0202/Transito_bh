@@ -14,11 +14,19 @@ import { buildClock, clockMotion, clockText } from "./scenes/clock";
 import { buildMap, mapMotion, mapText } from "./scenes/map";
 import { whoMotion, whoText } from "./scenes/who";
 import { buildBuses, busesMotion } from "./scenes/buses";
+import { buildRain, rainMotion, rainText } from "./scenes/rain";
+import { buildRisk, riskMotion, riskText } from "./scenes/risk";
 import { frontsText, methodText } from "./scenes/content";
 
 gsap.registerPlugin(ScrollTrigger);
 // Dev-only handle for inspecting timelines from the console.
 if (import.meta.env.DEV) Object.assign(window, { gsap, ScrollTrigger });
+// Dev-only: `?reduce-motion` simulates the OS setting (automation browsers can't emulate it).
+if (import.meta.env.DEV && new URLSearchParams(location.search).has("reduce-motion")) {
+  const real = window.matchMedia.bind(window);
+  window.matchMedia = (q: string) =>
+    q.includes("prefers-reduced-motion") ? real(/:\s*reduce\b/.test(q) ? "(min-width: 0px)" : "(max-width: 0px)") : real(q);
+}
 
 const LANG_KEY = "transito-bh:lang";
 
@@ -53,6 +61,8 @@ function applyText(c: Ctx) {
   clockText(c);
   mapText(c);
   whoText(c);
+  rainText(c);
+  riskText(c);
   frontsText(c);
   methodText(c);
 }
@@ -146,6 +156,8 @@ async function boot() {
   buildClock(ctx);
   buildMap(ctx);
   buildBuses(d.bus);
+  buildRain(d.effects?.events);
+  buildRisk(d.risk);
   applyText(ctx);
 
   document.querySelector("[data-lang-toggle]")!.addEventListener("click", () => {
@@ -164,9 +176,13 @@ async function boot() {
     decadeMotion();
     clockMotion(false);
     whoMotion();
+    rainMotion(false);
+    riskMotion(false);
   });
   mm.add(REDUCED, () => {
     clockMotion(true);
+    rainMotion(true);
+    riskMotion(true);
   });
 
   // In-page links: native smooth scroll unless reduced motion.

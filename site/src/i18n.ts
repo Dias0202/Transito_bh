@@ -47,6 +47,25 @@ export const ROAD_USERS: Record<Lang, Record<string, string>> = {
 export const regionalName = (s: string) =>
   s.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (_, sep: string, c: string) => sep + c.toUpperCase());
 
+/** Rate ratio of one event from effects.json, as a signed whole percent (e.g. 14, -31). */
+const fxPct = (c: Ctx, id: string) => {
+  const e = c.d.effects?.events.find((x) => x.event === id);
+  return e ? Math.round((e.irr - 1) * 100) : 0;
+};
+/** One decimal with a typographic sign: +1,0 / −0,3. */
+const signed = (c: Ctx, x: number) => `${x < 0 ? "−" : "+"}${c.num(Math.abs(x), 1)}`;
+const both = (c: Ctx) => {
+  const ev = c.d.effects?.events;
+  const a = ev?.find((x) => x.event === "rain_any")?.irr ?? 1;
+  const b = ev?.find((x) => x.event === "first_rain")?.irr ?? 1;
+  return Math.round((a * b - 1) * 100);
+};
+
+export const EVENT_LABELS: Record<Lang, Record<string, string>> = {
+  pt: { rain_any: "Chuva na hora", first_rain: "Primeira chuva após 72 h secos", holiday: "Feriado", carnaval: "Carnaval", optional_day: "Ponto facultativo", day_after_holiday: "Dia após feriado", match: "Jogo da Série A em BH" },
+  en: { rain_any: "Rain in the hour", first_rain: "First rain after 72 h dry", holiday: "Public holiday", carnaval: "Carnaval", optional_day: "Optional day off", day_after_holiday: "Day after a holiday", match: "Série A match in BH" },
+};
+
 type S = (c: Ctx) => string;
 type Dict = Record<string, S>;
 
@@ -118,6 +137,38 @@ const pt: Dict = {
       : "",
   "buses.aria": (c) => (c.d.bus ? `Pontos de GPS de ${c.num(c.d.bus.vehicles)} ônibus em Belo Horizonte.` : "Mapa de ônibus indisponível."),
   "buses.stamp": (c) => (c.d.bus ? `Retrato · ${c.busTime} · ${c.num(c.d.bus.lines)} linhas` : ""),
+
+  "nav.rain": () => "Chuva",
+  "nav.risk": () => "Risco",
+  "rain.eyebrow": () => "Quando o risco muda",
+  "rain.title": () => "A primeira chuva é a mais perigosa.",
+  "rain.step1": (c) =>
+    `Uma hora com chuva tem ${fxPct(c, "rain_any")}% mais sinistros. Se é a primeira chuva depois de três dias secos, mais ${fxPct(c, "first_rain")}% — cerca de ${both(c)}% no total. A pista acumula óleo e poeira.`,
+  "rain.step2": (c) =>
+    `Feriado tira ${Math.abs(fxPct(c, "holiday"))}% dos sinistros; Carnaval, ${Math.abs(fxPct(c, "carnaval"))}%. É menos carro na rua — não uma rua mais segura.`,
+  "rain.step3": (c) =>
+    `E dia de jogo? Nas ${c.num(c.d.effects?.matches ?? 0)} partidas da Série A em BH, o efeito não se distingue de zero — nem na cidade, nem perto dos estádios.`,
+  "rain.less": () => "menos sinistros",
+  "rain.one": () => "hora comum",
+  "rain.more": () => "mais sinistros",
+  "rain.caption": (c) =>
+    `Razão de taxas contra horas comparáveis (mesmo dia da semana, hora, mês e ano; pandemia controlada), com IC 95%. ${c.num(c.d.effects?.hours ?? 0)} horas, ${c.d.summary.first_year}–${c.d.summary.last_year}. Fontes: BHTrans, INMET (Pampulha), Brasileirão Série A.`,
+
+  "risk.eyebrow": () => "Onde concentrar",
+  "risk.title": (c) =>
+    c.d.risk ? `${c.pct(0.05)} dos lugares-horário concentram ${c.pct(c.d.risk.top5)} dos sinistros.` : "",
+  "risk.lead": (c) =>
+    c.d.risk
+      ? `Cada hexágono × hora da semana foi ordenado pelo risco previsto para ${c.d.risk.test_year}, sem olhar ${c.d.risk.test_year}. Priorizar o topo da lista captura ${c.num(c.d.risk.top5 / 0.05, 1)} vezes o que o acaso capturaria.`
+      : "",
+  "risk.note": (c) =>
+    c.d.risk
+      ? `Resultado honesto: o gradient boosting empatou com um ranking simples — taxa do local × perfil horário da cidade (diferença no topo de 5%: ${signed(c, c.d.risk.tie_ci_top5[0] * 100)} a ${signed(c, c.d.risk.tie_ci_top5[1] * 100)} p.p., IC 95%). Para priorizar fiscalização e engenharia, o simples basta.`
+      : "",
+  "risk.caption": (c) =>
+    c.d.risk
+      ? `Fração dos ${c.num(c.d.risk.crashes)} sinistros georreferenciados de ${c.d.risk.test_year} que cai nos k% de hexágono-horários de maior risco previsto (${c.num(c.d.risk.cells)} hexágonos × 168 horas).`
+      : "",
 
   "ml.eyebrow": () => "Próximos passos",
   "ml.title": () => "O que aprendizado de máquina pode fazer.",
@@ -199,6 +250,38 @@ const en: Dict = {
   "buses.aria": (c) => (c.d.bus ? `GPS points of ${c.num(c.d.bus.vehicles)} buses in Belo Horizonte.` : "Bus map unavailable."),
   "buses.stamp": (c) => (c.d.bus ? `Snapshot · ${c.busTime} (Brasília) · ${c.num(c.d.bus.lines)} lines` : ""),
 
+  "nav.rain": () => "Rain",
+  "nav.risk": () => "Risk",
+  "rain.eyebrow": () => "When risk changes",
+  "rain.title": () => "The first rain is the most dangerous.",
+  "rain.step1": (c) =>
+    `An hour with rain has ${fxPct(c, "rain_any")}% more crashes. If it is the first rain after three dry days, another ${fxPct(c, "first_rain")}% — about ${both(c)}% in total. Oil and dust build up on the road.`,
+  "rain.step2": (c) =>
+    `Holidays remove ${Math.abs(fxPct(c, "holiday"))}% of crashes; Carnaval, ${Math.abs(fxPct(c, "carnaval"))}%. That is fewer cars on the road — not safer streets.`,
+  "rain.step3": (c) =>
+    `And match days? Across ${c.num(c.d.effects?.matches ?? 0)} Série A matches in BH, the effect is indistinguishable from zero — citywide and near the stadiums.`,
+  "rain.less": () => "fewer crashes",
+  "rain.one": () => "typical hour",
+  "rain.more": () => "more crashes",
+  "rain.caption": (c) =>
+    `Rate ratio against comparable hours (same weekday, hour, month and year; pandemic controlled), with 95% CI. ${c.num(c.d.effects?.hours ?? 0)} hours, ${c.d.summary.first_year}–${c.d.summary.last_year}. Sources: BHTrans, INMET (Pampulha), Brasileirão Série A.`,
+
+  "risk.eyebrow": () => "Where to focus",
+  "risk.title": (c) =>
+    c.d.risk ? `${c.pct(0.05)} of place-hours hold ${c.pct(c.d.risk.top5)} of crashes.` : "",
+  "risk.lead": (c) =>
+    c.d.risk
+      ? `Every hexagon × hour of the week was ranked by risk predicted for ${c.d.risk.test_year}, without looking at ${c.d.risk.test_year}. Prioritising the top of the list captures ${c.num(c.d.risk.top5 / 0.05, 1)} times what chance would.`
+      : "",
+  "risk.note": (c) =>
+    c.d.risk
+      ? `Honest result: gradient boosting tied a simple ranking — place rate × citywide hourly profile (top-5% difference: ${signed(c, c.d.risk.tie_ci_top5[0] * 100)} to ${signed(c, c.d.risk.tie_ci_top5[1] * 100)} pp, 95% CI). To prioritise enforcement and engineering, simple is enough.`
+      : "",
+  "risk.caption": (c) =>
+    c.d.risk
+      ? `Share of ${c.d.risk.test_year}'s ${c.num(c.d.risk.crashes)} geolocated crashes falling in the top-k% hexagon-hours by predicted risk (${c.num(c.d.risk.cells)} hexagons × 168 hours).`
+      : "",
+
   "ml.eyebrow": () => "Next steps",
   "ml.title": () => "What machine learning can do.",
   "ml.lead": () => "Four fronts, each validated on real data or in simulation before it becomes a proposal. No model result is shown here until one exists.",
@@ -245,6 +328,8 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
         `Sinistros com vítima ${s.first_year}–${s.last_year}: BHTrans/PBH, portal dados.pbh.gov.br (ocorrências, veículos e pessoas envolvidas).`,
         "Posição dos ônibus: PBH, “Tempo Real Ônibus — Coordenada atualizada”.",
         "Hexágonos: sistema H3, resolução 8.",
+        "Chuva: INMET, estação automática A521 (Pampulha), dados horários.",
+        "Feriados: nacionais, de Minas Gerais e municipais de BH. Jogos: Brasileirão Série A (base aberta de Adão Duque).",
         "Mapa base: © OpenStreetMap contributors, © CARTO.",
       ],
       limits: [
@@ -252,6 +337,7 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
         `Coordenadas de 2011–2015 usam outro formato e foram convertidas para o UTM dos anos seguintes. ${c.num(s.geocode_placeholders_removed)} registros caíam num mesmo ponto vindo de cinco ou mais regionais — um geocódigo padrão — e foram retirados do mapa.`,
         `${c.pct(s.share_without_coords)} dos sinistros não têm coordenada válida e ficam fora do mapa, mas contam nos totais.`,
         "Retrato dos ônibus é um instante, não uma média.",
+        "Jogos: só a Série A — Mineiro, Copa do Brasil, Libertadores e Série B ficam de fora. Chuva: uma estação para a cidade toda.",
       ],
     };
   }
@@ -260,6 +346,8 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
       `Injury crashes ${s.first_year}–${s.last_year}: BHTrans/city of Belo Horizonte, dados.pbh.gov.br (crashes, vehicles and people involved).`,
       "Bus positions: city of Belo Horizonte, “Tempo Real Ônibus — Coordenada atualizada”.",
       "Hexagons: H3 grid, resolution 8.",
+      "Rain: INMET automatic station A521 (Pampulha), hourly.",
+      "Holidays: national, Minas Gerais and BH municipal. Matches: Brasileirão Série A (open dataset by Adão Duque).",
       "Basemap: © OpenStreetMap contributors, © CARTO.",
     ],
     limits: [
@@ -267,6 +355,7 @@ export function methodLists(c: Ctx): { sources: string[]; limits: string[] } {
       `2011–2015 coordinates use another layout and were converted to the later years' UTM grid. ${c.num(s.geocode_placeholders_removed)} records sat on one spot reported from five or more districts — a default geocode — and were removed from the map.`,
       `${c.pct(s.share_without_coords)} of crashes have no valid coordinate; they are off the map but in the totals.`,
       "The bus picture is a single instant, not an average.",
+      "Matches: Série A only — state league, Copa do Brasil, Libertadores and Série B are missing. Rain: one station for the whole city.",
     ],
   };
 }

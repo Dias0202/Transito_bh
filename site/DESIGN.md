@@ -86,6 +86,8 @@ All triggers use `ScrollTrigger`, with step start at `"top 50%"` (Pudding), and 
 | 3 | **Map: hotspot tour** (H3) | dark | Camera `easeTo` per region chapter (`--dur-cinematic`, in-out). Region hex layer opacity goes 0→1 on enter and 1→0.25 on exit. Active hex gets an amber stroke. | One step per region; `onEnter` / `onEnterBack` | Map pinned while chapters scroll over it (template pattern) | Text cards centred over the map, solid `--ink-2` with `--text-inv` (template's <750px behaviour); pitch 0; `cooperativeGestures`-style scroll so the map never traps the page | `jumpTo`; layers switch with no fade |
 | 4 | **Who crashes** (vehicle mix) | light | Horizontal bars grow from 0 (`--dur-section`, ease-out-quart, 60ms stagger). The motorcycle bar is amber and draws last. | Enters at 60% of viewport, plays once | No | Same; labels above bars | Bars static |
 | 5 | **Buses right now** | dark | GPS dots fade in by snapshot timestamp (one pass, about 1.2s total). A "snapshot at HH:MM" stamp is always visible. No fake live animation. | Enters viewport | Optional short pin (1 viewport) | Static map image fallback if WebGL is unavailable | Dots shown at once |
+| 5a | **When risk changes** (rain, holidays, matches) | dark | One persistent dot per event starts on "1 = typical hour" and travels along a log scale to its rate ratio (`--dur-cinematic`, in-out; 120ms between dots of a group). CI band and value fade in after the dot lands. Three steps: rain → holidays → matches; matches stay on 1, which *is* the finding. | 3 text steps beside a sticky chart (Pudding); step line at 55%, 80% on ≤900px because the sticky graphic covers the top of the screen | Sticky chart (CSS) | Chart above text; long caption moves below the steps so the sticky area stays short; `overflow-x: clip` on the list (translated sliders would otherwise widen the page) | Dots jump to their state, no travel; values visible |
+| 5b | **Where to focus** (risk concentration) | light | Concentration curve drawn by the reader's scroll (`scrub: 0.6`, short distance: chart top 80% → centre 45%); chance diagonal first, then model and simple ranking together; 5% and 10% markers fade in at the end. | Scrubbed | No | Same, SVG scales | Curve and markers drawn at once |
 | 6 | **What ML can do** (4 fronts) | light | 4 cards stagger in. Status chips (e.g. "prototype", "planned") have a micro hover. No progress bars that imply completion. | Enters viewport | No | Single column | Static |
 | 7 | **Methods & sources** | light | Nothing beyond the standard fade-up of the heading. | — | No | — | — |
 
@@ -98,6 +100,14 @@ All triggers use `ScrollTrigger`, with step start at `"top 50%"` (Pudding), and 
 - Animate transforms and opacity only.
 - Lazy-init MapLibre when scene 3 comes within 1 viewport.
 - Set `will-change` only during active tweens (INF from Apple's `WillChange` component name).
+
+### Principles adopted in scenes 5a/5b
+
+- **Shared object that changes position** (Apple scene continuity; Mapbox chapter states): each event keeps one dot for the whole scene and only its position changes, so the reader never loses orientation.
+- **Teach the encoding first** ("Where the Shadow Fell"): the scale header names "typical hour" before any dot moves; the first step explains one effect before showing all.
+- **Monitor scroll, never hijack it** (Pudding): 5a uses triggered steps, 5b a short scrub; no pinning beyond CSS `position: sticky`.
+- **Restraint** (Linear tokens): the same DUR/EASE tokens; amber only for effects that raise risk, ink for ones that lower it, grey for "no effect".
+- **Honesty as content:** a tie (model vs simple ranking) and a null (matches) are shown as findings, not hidden.
 
 ## 5. Visual tokens
 

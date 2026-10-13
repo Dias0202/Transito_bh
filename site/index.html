@@ -28,6 +28,8 @@
             <li><a href="#clock" data-i18n="nav.clock"></a></li>
             <li><a href="#map" data-i18n="nav.map"></a></li>
             <li><a href="#who" data-i18n="nav.who"></a></li>
+            <li><a href="#rain" data-i18n="nav.rain"></a></li>
+            <li><a href="#risk" data-i18n="nav.risk"></a></li>
             <li><a href="#buses" data-i18n="nav.buses"></a></li>
             <li><a href="#ml" data-i18n="nav.ml"></a></li>
             <li><a href="#method" data-i18n="nav.method"></a></li>
@@ -130,7 +132,48 @@
         </div>
       </section>
 
-      <!-- 6. Buses -->
+      <!-- 6. When risk changes: rain, holidays, matches (rate ratios) -->
+      <section class="scene rain" id="rain" data-theme="dark" data-scene="rain">
+        <div class="wrap">
+          <header class="scene__head">
+            <p class="eyebrow" data-reveal data-i18n="rain.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="rain.title"></h2>
+          </header>
+        </div>
+        <div class="wrap scrolly">
+          <div class="scrolly__steps">
+            <div class="step" data-step="0"><p data-i18n="rain.step1"></p></div>
+            <div class="step" data-step="1"><p data-i18n="rain.step2"></p></div>
+            <div class="step" data-step="2"><p data-i18n="rain.step3"></p></div>
+          </div>
+          <figure class="scrolly__graphic">
+            <p class="fx__scale" aria-hidden="true"><span></span><span class="fx__scaletrack"><span data-i18n="rain.less"></span><span data-i18n="rain.one"></span><span data-i18n="rain.more"></span></span><span></span></p>
+            <ol class="effects" data-effects></ol>
+            <figcaption class="caption rain__cap" data-i18n="rain.caption"></figcaption>
+          </figure>
+        </div>
+        <!-- On phones the sticky graphic must stay short; the long caption moves below the steps. -->
+        <p class="wrap caption rain__cap--after" aria-hidden="true" data-i18n="rain.caption"></p>
+      </section>
+
+      <!-- 7. Where to focus: risk concentration -->
+      <section class="scene risk" id="risk" data-theme="light" data-scene="risk">
+        <div class="wrap split">
+          <header class="split__text">
+            <p class="eyebrow" data-reveal data-i18n="risk.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="risk.title"></h2>
+            <p class="lead" data-reveal data-i18n="risk.lead"></p>
+            <p class="note" data-reveal data-i18n="risk.note"></p>
+          </header>
+          <figure class="split__fig">
+            <svg class="capture" data-capture role="img" aria-labelledby="risk-cap"></svg>
+            <figcaption id="risk-cap" class="caption" data-i18n="risk.caption"></figcaption>
+            <div class="sr-only"><table data-capture-table></table></div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 8. Buses -->
       <section class="scene buses" id="buses" data-theme="dark" data-scene="buses">
         <div class="wrap split split--reverse">
           <header class="split__text">
@@ -146,7 +189,7 @@
         </div>
       </section>
 
-      <!-- 7. ML -->
+      <!-- 9. ML -->
       <section class="scene ml" id="ml" data-theme="light" data-scene="ml">
         <div class="wrap">
           <header class="scene__head">
@@ -158,7 +201,7 @@
         </div>
       </section>
 
-      <!-- 8. Method -->
+      <!-- 10. Method -->
       <section class="scene method" id="method" data-theme="light" data-scene="method">
         <div class="wrap method__grid">
           <header>

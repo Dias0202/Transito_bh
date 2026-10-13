@@ -57,6 +57,22 @@ export interface HexCollection {
   }[];
 }
 
+export interface EffectRow { event: string; irr: number; ci_low: number; ci_high: number }
+export interface Effects { hours: number; crashes: number; matches: number; events: EffectRow[] }
+
+export interface Risk {
+  test_year: number;
+  cells: number;
+  slots: number;
+  crashes: number;
+  k: number[]; // share of cell-hours prioritised, 0..0.30
+  curves: { model: number[]; cellxprofile: number[] }; // share of crashes captured
+  top5: number;
+  top10: number;
+  top5_simple: number;
+  tie_ci_top5: [number, number];
+}
+
 export interface Data {
   summary: Summary;
   yearly: YearRow[];
@@ -64,6 +80,8 @@ export interface Data {
   regionals: Regional[];
   vehicles: Vehicles;
   bus: BusSnapshot | null;
+  effects: Effects | null;
+  risk: Risk | null;
 }
 
 const base = `${import.meta.env.BASE_URL}data/`;
@@ -75,15 +93,18 @@ async function get<T>(name: string): Promise<T> {
 }
 
 export async function loadCore(): Promise<Data> {
-  const [summary, yearly, clock, regionals, vehicles, bus] = await Promise.all([
+  const [summary, yearly, clock, regionals, vehicles, bus, effects, risk] = await Promise.all([
     get<Summary>("summary"),
     get<YearRow[]>("yearly"),
     get<Clock>("clock"),
     get<Regional[]>("regionals"),
     get<Vehicles>("vehicles"),
     get<BusSnapshot>("bus").catch(() => null),
+    // Model outputs are optional: their scenes hide when a file is missing.
+    get<Effects>("effects").catch(() => null),
+    get<Risk>("risk").catch(() => null),
   ]);
-  return { summary, yearly, clock, regionals, vehicles, bus };
+  return { summary, yearly, clock, regionals, vehicles, bus, effects, risk };
 }
 
 // Hexes are the largest file; only fetched when the map scene is near.
