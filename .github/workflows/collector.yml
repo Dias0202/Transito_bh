@@ -19,8 +19,10 @@ concurrency:
 permissions:
   contents: read
 
+# rclone reads every RCLONE_* env var as a flag (RCLONE_VERSION -> --version),
+# so workflow-level names avoid that prefix.
 env:
-  RCLONE_VERSION: v1.68.2
+  PIN_RCLONE_VERSION: v1.68.2
   DRIVE_DEST: gdrive:transito_bh/raw/collector
 
 jobs:
@@ -44,13 +46,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/bin/rclone
-          key: rclone-${{ env.RCLONE_VERSION }}
+          key: rclone-${{ env.PIN_RCLONE_VERSION }}
 
       - name: Install rclone
         if: steps.rclone-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/.local/bin
-          curl -sSL "https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip" -o /tmp/rclone.zip
+          curl -sSL "https://downloads.rclone.org/${PIN_RCLONE_VERSION}/rclone-${PIN_RCLONE_VERSION}-linux-amd64.zip" -o /tmp/rclone.zip
           unzip -q -j /tmp/rclone.zip '*/rclone' -d ~/.local/bin
 
       # Runner's system python3 (3.12) is enough: the collector is stdlib-only.
@@ -65,9 +67,9 @@ jobs:
       # e.g. an expired OAuth refresh token. See docs/setup_rclone.md.
       - name: Upload to Google Drive
         env:
-          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+          DRIVE_CONF: ${{ secrets.RCLONE_CONF }}
         run: |
-          test -n "$RCLONE_CONF" || { echo "::error::RCLONE_CONF secret missing"; exit 1; }
-          printf '%s' "$RCLONE_CONF" > /tmp/rclone.conf
+          test -n "$DRIVE_CONF" || { echo "::error::RCLONE_CONF secret missing"; exit 1; }
+          printf '%s' "$DRIVE_CONF" > /tmp/rclone.conf
           ~/.local/bin/rclone --config /tmp/rclone.conf copy out "$DRIVE_DEST" --no-traverse --retries 3
           rm -f /tmp/rclone.conf
