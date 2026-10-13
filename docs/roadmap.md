@@ -17,7 +17,7 @@ Projeto hobby contínuo: cada fase entrega algo publicável (figura, seção do 
 | F9 | **Simulador "e se" de segurança** (`sim/whatif.py`): cenários com efeitos medidos + premissas externas explícitas, incerteza por Monte Carlo sobre os ICs. Cenários: redutores nos N pontos de maior risco; radares de volta; velocidade máxima 60→50 nas arteriais (Nilsson, velocidades reais dos radares); resposta à primeira chuva | F3, F3b, F3c, F2 | ⏳ |
 | F9b | **Simulador interativo no site**: controles (nº de redutores, regionais, % de redução de velocidade) recalculando a partir de agregados por célula; sempre com faixa de incerteza e rótulo medido/premissa | F9 | ✅ cena "E se" no site (3 cenários) |
 | F4 | Previsão de velocidade 15–60 min (Graph WaveNet / STGCN) — GPU Colab | F2, F2b | ⏳ |
-| F5 | SUMO: pilotos Hipercentro/Contorno, Antônio Carlos × Pampulha, Anel BR-040 ↔ Cristiano Machado; calibração com radares + TomTom | F2 | ⏳ |
+| F5 | SUMO: pilotos Hipercentro/Contorno, Antônio Carlos × Pampulha, Anel BR-040 ↔ Cristiano Machado; calibração com radares + TomTom | F2 | 🟡 piloto Antônio Carlos montado (`sim/sumo_pilot.py`), **não calibrado** (ver abaixo); cenário 60→50 km/h não publicado |
 | F6 | RL semafórico (sumo-rl, PPO/MAPPO) vs tempo fixo | F5 | ⏳ |
 | F7 | Camada macro BH — "e se" de tráfego: faixa exclusiva, semáforo adaptativo, restrição de carga no Anel, obras/fechamentos; tempo de viagem e atraso por cenário | F5, OD RMBH | ⏳ |
 | F10 | **"E se" de infraestrutura (SUMO, micro + meso)** — catálogo abaixo; cada cenário rodado contra a linha de base calibrada, métricas: tempo de viagem por corredor, atraso, filas, velocidade, emissões (HBEFA do SUMO) e conflitos (SSM do SUMO, *proxy* de risco) | F5, F7 | 📝 registrado |
@@ -29,6 +29,21 @@ Projeto hobby contínuo: cada fase entrega algo publicável (figura, seção do 
 - **Incerteza sempre visível:** Monte Carlo sobre os ICs; o site mostra faixa, não ponto.
 - **Efeito nulo é resultado:** se o efeito medido inclui zero (ex.: radares), o cenário mostra uma faixa que inclui zero.
 - **Custo zero:** SUMO e simulações rodam local ou em CPU no Colab (sem unidades extras).
+
+## F5 — diário do piloto Antônio Carlos (7–8h, dias úteis)
+
+Alvo de calibração: GEH < 5 nas contagens dos 6 radares da BHTrans e erro de velocidade < 5 km/h.
+
+| Versão | Mudança | GEH médio | Erro de velocidade | Diagnóstico |
+|---|---|---|---|---|
+| v1 | rede OSM (motorway..tertiary), semáforos adivinhados, rotas aleatórias + routeSampler | 68 | 19 km/h | rede travada: 2.247 de 23.469 viagens concluídas |
+| v2 | só semáforos do OSM, controle atuado, rotas que usam ≥ 1 km da avenida | 44 | +14 km/h | routeSampler acerta as contagens, mas a inserção nas ruas laterais (1 faixa) atrasa ~20 min → avenida vazia |
+| v3 | rotas cortadas para começar/terminar na avenida | 41 | 13 km/h | ainda fila de inserção (~15 min) e um trecho travado (radar 338) |
+
+**Próximos passos:** (1) auditar faixas no OSM (faixas exclusivas do MOVE, nº de faixas gerais por trecho) e corrigir a rede;
+(2) inserir a demanda nas fronteiras com fluxos por faixa (`flowrouter`/contagens de 15 min) em vez de rotas aleatórias;
+(3) semáforos: tempos reais não são abertos — testar ciclos fixos plausíveis e calibrar pela velocidade;
+(4) só então rodar cenários. Até lá, nenhum número de cenário SUMO é publicado.
 
 ## Catálogo de cenários de infraestrutura (F10) — registrado, ainda não modelado
 

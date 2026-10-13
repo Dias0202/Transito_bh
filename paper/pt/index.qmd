@@ -226,6 +226,14 @@ excesso de toda hora com chuva (~402 h/ano) é 81 (66–96). Uma ação
 **Leitura.** Redutores em ruas locais são a alavanca com efeito medido; ganhos maiores exigiriam atuar nas vias
 arteriais, onde o efeito de redutores **não** foi medido e onde entram os cenários de infraestrutura (SUMO, F10).
 
+# Microssimulação (em andamento)
+
+Um piloto SUMO [@lopez2018sumo] da Av. Antônio Carlos (Lagoinha–Pampulha, 7–8h) foi montado com a malha do OSM e demanda
+ajustada às contagens dos radares da BHTrans (`routeSampler`). Após três iterações, **ainda não atinge o critério de
+calibração** (GEH < 5; melhor resultado: GEH 41, erro de velocidade 13 km/h): faltam a configuração real de faixas
+(inclusive as do MOVE), os tempos de semáforo e uma matriz origem-destino. Por isso nenhum resultado de cenário de
+microssimulação é apresentado nesta versão; o diário de calibração está em `docs/roadmap.md`.
+
 # Métodos de aprendizado de máquina (planejado)
 
 1. **Previsão de congestionamento.** Redes em grafo espaço-temporais [@li2018dcrnn; @yu2018stgcn; @wu2019graphwavenet]

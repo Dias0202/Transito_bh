@@ -225,6 +225,14 @@ the excess over all rainy hours (~402 h/year) is 81 (66–96). An action
 **Reading.** Speed bumps on local streets are the lever with a measured effect; larger gains would require acting on
 arterials, where the effect of bumps was **not** measured and where the infrastructure scenarios (SUMO, F10) come in.
 
+# Microsimulation (in progress)
+
+A SUMO [@lopez2018sumo] pilot of Av. Antônio Carlos (Lagoinha–Pampulha, 7–8h) was built from the OSM network with demand
+fitted to BHTrans radar counts (`routeSampler`). After three iterations it **does not yet meet the calibration criterion**
+(GEH < 5; best: GEH 41, speed error 13 km/h): the real lane layout (including MOVE bus lanes), signal timings and an
+origin–destination matrix are missing. No microsimulation scenario result is therefore reported in this version; the
+calibration log is in `docs/roadmap.md`.
+
 # Machine-learning methods (planned)
 
 1. **Congestion forecasting.** Spatio-temporal graph networks [@li2018dcrnn; @yu2018stgcn; @wu2019graphwavenet]

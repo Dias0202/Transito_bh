@@ -85,8 +85,10 @@ def build_network() -> Path:
         if not osm.exists():
             raise FileNotFoundError(f"{osm}: download the OSM extract first (see docs/roadmap.md, F5)")
         b = sumo_home() / "bin"
+        # Signals only where OSM has them (the avenue is largely grade-separated), actuated
+        # control instead of fixed default cycles; v1 guessed signals and gridlocked.
         run([str(b / "netconvert"), "--osm-files", str(osm), "-o", str(net), "--geometry.remove", "--roundabouts.guess",
-             "--ramps.guess", "--junctions.join", "--tls.guess-signals", "--tls.discard-simple", "--tls.join",
+             "--ramps.guess", "--junctions.join", "--tls.discard-simple", "--tls.join", "--tls.default-type", "actuated",
              "--keep-edges.components", "1", "--remove-edges.isolated", "--output.street-names",
              "--osm.speedlimit-none", "60"])
     return net
@@ -135,6 +137,35 @@ def write_vtypes(t: pd.DataFrame, path: Path) -> dict:
     return share
 
 
+MIN_AVENUE_M = 1000
+
+
+def filter_corridor_routes(net_path: Path, src: Path, dst: Path) -> int:
+    import sumolib
+
+    net = sumolib.net.readNet(str(net_path))
+    on_avenue = {e.getID(): e.getLength() for e in net.getEdges() if AVENUE in (e.getName() or "")}
+    root = ET.parse(src).getroot()
+    out = ET.Element("routes")
+    n = 0
+    for veh in root.iter("vehicle"):
+        r = veh.find("route")
+        if r is None:
+            continue
+        edges = r.get("edges", "").split()
+        if sum(on_avenue.get(e, 0) for e in edges) < MIN_AVENUE_M:
+            continue
+        # Cut to the avenue span: vehicles are inserted on the (multi-lane) avenue itself.
+        # v2 started them on single-lane side streets and insertion queued for ~20 min,
+        # starving the avenue. Side-street merges become insertions: a stated simplification.
+        idx = [i for i, e in enumerate(edges) if e in on_avenue]
+        edges = edges[idx[0]: idx[-1] + 1]
+        ET.SubElement(out, "route", id=f"c{n}", edges=" ".join(edges))
+        n += 1
+    ET.ElementTree(out).write(dst)
+    return n
+
+
 def build_demand(net: Path, t: pd.DataFrame) -> Path:
     w = work()
     tools = sumo_home() / "tools"
@@ -143,6 +174,11 @@ def build_demand(net: Path, t: pd.DataFrame) -> Path:
         run([sys.executable, str(tools / "randomTrips.py"), "-n", str(net), "-o", str(w / "trips.xml"), "-r", str(cand),
              "-e", "40000", "-p", "0.5", "--fringe-factor", "20", "--min-distance", "1500", "--seed", "42",
              "--validate", "--remove-loops"])
+    # Keep only candidate routes that use the avenue for at least MIN_AVENUE_M: the
+    # pilot models corridor traffic, not the whole network around it.
+    corridor = w / "candidates_corridor.rou.xml"
+    filter_corridor_routes(net, cand, corridor)
+    cand = corridor
     counts = w / "counts.xml"
     write_counts(t, counts)
     sampled = w / "sampled.rou.xml"
