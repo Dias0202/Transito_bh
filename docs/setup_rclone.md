@@ -10,6 +10,11 @@ Windows: `winget install Rclone.Rclone` (ou baixe em <https://rclone.org/downloa
 
 ## 2. (Recomendado) Criar seu próprio OAuth client
 
+> **Estado atual (2026-10-13):** o remote foi criado com o client **compartilhado** do rclone
+> (`rclone config create gdrive drive scope=drive.file`) e o coletor já grava no Drive.
+> O rclone avisa que esse client "is being retired and will stop working during 2026" —
+> quando o upload começar a falhar, faça este passo 2 e recrie o remote com seu client.
+
 O client padrão do rclone é compartilhado e sofre *rate limit*. Siga
 <https://rclone.org/drive/#making-your-own-client-id>:
 
