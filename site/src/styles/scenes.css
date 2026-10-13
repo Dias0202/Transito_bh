@@ -137,6 +137,28 @@
 }
 @media (max-width: 900px) { .heatmap { grid-template-columns: 2rem repeat(24, minmax(0, 1fr)); gap: 1px; } }
 
+/* ---------- 3b. Congestion strips ---------- */
+.cg__fig { margin: 0; display: grid; gap: var(--s-3); }
+.cg__list, .cg__axisrow { --cgcols: minmax(0, 15rem) minmax(0, 1fr) 7rem; }
+.cg__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.cg, .cg__axisrow { display: grid; grid-template-columns: var(--cgcols); gap: var(--s-4); align-items: center; }
+.cg__name { display: grid; font-size: var(--fs-small); line-height: 1.25; }
+.cg__name b { font-weight: 600; }
+.cg__dir { color: var(--fg-muted); font-size: var(--fs-caption); }
+.cg__strip { display: grid; grid-template-columns: repeat(24, 1fr); gap: 1px; height: 22px; }
+.cg__strip i { display: block; border-radius: 1px; }
+.cg__val { font-size: var(--fs-small); text-align: right; color: var(--accent-text); font-weight: 600; }
+.cg__axis { display: grid; grid-template-columns: repeat(24, 1fr); font-size: var(--fs-caption); color: var(--fg-muted); }
+.cg__axis i { font-style: normal; }
+.cg__legend { display: flex; align-items: center; gap: var(--s-2); margin: 0; }
+.cg__ramp { display: block; width: 120px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #E4DED4, #C46A00); }
+@media (max-width: 700px) {
+  .cg__list, .cg__axisrow { --cgcols: minmax(0, 1fr) 5.5rem; }
+  .cg { grid-template-areas: "name val" "strip strip"; row-gap: var(--s-1); }
+  .cg__name { grid-area: name; } .cg__val { grid-area: val; } .cg__strip { grid-area: strip; }
+  .cg__axisrow { grid-template-columns: 1fr; } .cg__axisrow > span:not(.cg__axis) { display: none; }
+}
+
 /* ---------- 4. Map tour ---------- */
 .maptour { position: relative; }
 .maptour__sticky { position: sticky; top: 0; height: 100svh; }

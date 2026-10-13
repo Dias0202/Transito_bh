@@ -121,6 +121,25 @@ const pt: Dict = {
   "clock.caption": (c) => `Sinistros com vítima por dia da semana e hora, ${c.f.years} (n = ${c.num(c.d.clock.n)}).`,
   "clock.tableCaption": () => "Sinistros por dia da semana (linhas) e hora (colunas)",
 
+  "nav.congestion": () => "Onde para",
+  "cong.eyebrow": () => "Onde o trânsito para",
+  "cong.title": (c) => {
+    const s = c.d.congestion?.sites ?? [];
+    const w = s.map((x) => x.worst).sort((p, q) => p - q);
+    const med = w.length ? w[Math.floor(w.length / 2)] : 1;
+    return `Nos pontos mais travados, o pico deixa os carros a ${c.pct(med)} da velocidade da madrugada.`;
+  },
+  "cong.lead": (c) =>
+    c.d.congestion
+      ? `Cada faixa é um dia útil médio num radar da BHTrans: a cor mostra a velocidade dos carros em relação à da madrugada. Os ${c.d.congestion.sites.length} pontos mais travados, de ${c.num(c.d.congestion.sites_total)} medidos.`
+      : "",
+  "cong.legendFree": () => "fluxo livre",
+  "cong.legendSlow": () => "a 30% ou menos",
+  "cong.caption": (c) =>
+    c.d.congestion
+      ? `Índice de velocidade = velocidade média dos carros na hora ÷ mediana da madrugada (0h–5h), por radar e sentido, dias úteis; ${c.num(c.d.congestion.days ?? 0)} dias de radar entre ${c.d.congestion.first_day ?? ""} e ${c.d.congestion.last_day ?? ""}. Valor à direita: pior hora. Fonte: BHTrans, contagens volumétricas de radares.`
+      : "",
+
   "map.eyebrow": () => "O mapa",
   "map.title": () => "Onde acontece.",
   "map.aria": (c) => `Mapa de Belo Horizonte com sinistros com vítima por hexágono, ${c.f.years}.`,
@@ -265,6 +284,25 @@ const en: Dict = {
     `The worst hour of the week: ${WEEKDAYS.en[c.f.worst.weekday]} at ${c.f.worst.hour}:00 — ${c.num(c.f.worst.n)} crashes in five years.`,
   "clock.caption": (c) => `Injury crashes by weekday and hour, ${c.f.years} (n = ${c.num(c.d.clock.n)}).`,
   "clock.tableCaption": () => "Crashes by weekday (rows) and hour (columns)",
+
+  "nav.congestion": () => "Gridlock",
+  "cong.eyebrow": () => "Where traffic stops",
+  "cong.title": (c) => {
+    const s = c.d.congestion?.sites ?? [];
+    const w = s.map((x) => x.worst).sort((p, q) => p - q);
+    const med = w.length ? w[Math.floor(w.length / 2)] : 1;
+    return `At the most congested sites, the peak leaves cars at ${c.pct(med)} of their night speed.`;
+  },
+  "cong.lead": (c) =>
+    c.d.congestion
+      ? `Each strip is an average weekday at a BHTrans radar: colour shows car speed relative to the night. The ${c.d.congestion.sites.length} most congested sites out of ${c.num(c.d.congestion.sites_total)} measured.`
+      : "",
+  "cong.legendFree": () => "free flow",
+  "cong.legendSlow": () => "at 30% or less",
+  "cong.caption": (c) =>
+    c.d.congestion
+      ? `Speed index = mean car speed in the hour ÷ night median (00:00–05:00), per radar and direction, weekdays; ${c.num(c.d.congestion.days ?? 0)} radar days between ${c.d.congestion.first_day ?? ""} and ${c.d.congestion.last_day ?? ""}. Right: worst hour. Source: BHTrans radar volumetric counts.`
+      : "",
 
   "map.eyebrow": () => "The map",
   "map.title": () => "Where it happens.",

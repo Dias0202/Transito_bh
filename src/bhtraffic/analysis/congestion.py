@@ -16,6 +16,7 @@ camera is*, not the whole corridor. Read together with TomTom corridor delays.
 from __future__ import annotations
 
 import glob
+import json
 
 import pandas as pd
 
@@ -91,6 +92,9 @@ def main() -> None:
     p.to_parquet(out / "congestion_profiles.parquet", index=False)
     r.to_parquet(out / "congestion_ranking.parquet", index=False)
     span = (agg["bin"].min(), agg["bin"].max(), agg["bin"].dt.date.nunique())
+    months = sorted(agg["bin"].dt.to_period("M").astype(str).unique())
+    (out / "congestion_meta.json").write_text(json.dumps({"first_day": str(span[0].date()), "last_day": str(span[1].date()),
+                                                          "days": int(span[2]), "months": len(months)}), "utf-8")
     print(f"radar data: {span[0]} .. {span[1]} ({span[2]} days), {len(r)} sites")
     print(r.head(15).to_string(index=False))
 

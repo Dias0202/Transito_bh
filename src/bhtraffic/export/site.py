@@ -257,6 +257,29 @@ def whatif() -> dict | None:
     }
 
 
+def congestion(top: int = 12) -> dict | None:
+    """Weekday speed index (car speed / night free-flow) by hour at the most congested radar sites."""
+    a = processed_dir("analysis")
+    pf, rf = a / "congestion_profiles.parquet", a / "congestion_ranking.parquet"
+    if not (pf.exists() and rf.exists()):
+        return None
+    prof, rank = pd.read_parquet(pf), pd.read_parquet(rf)
+    rank = rank[rank["congested_hours"] > 0].head(top)
+    w = prof[prof["day_type"] == "weekday"].set_index(["id_endereco", "sentido", "hour"])["speed_index"]
+    sites = []
+    for r in rank.itertuples():
+        strip = [w.get((r.id_endereco, r.sentido, h)) for h in range(24)]
+        sites.append({
+            "name": str(r.endereco).split(",")[0].replace("Av. Presidente ", "Av. ").strip(),
+            "where": str(r.endereco), "dir": r.sentido, "lat": round(float(r.lat), 5), "lon": round(float(r.lon), 5),
+            "worst": round(float(r.worst_index), 3), "worst_hour": int(r.worst_hour), "hours": int(r.congested_hours),
+            "free_flow": round(float(r.free_flow), 1),
+            "strip": [None if (v is None or pd.isna(v)) else round(float(v), 3) for v in strip],
+        })
+    meta = json.loads((a / "congestion_meta.json").read_text("utf-8")) if (a / "congestion_meta.json").exists() else {}
+    return {"sites": sites, "sites_total": int(len(prof[["id_endereco", "sentido"]].drop_duplicates())), **meta}
+
+
 def main() -> int:
     o, v, p = _load()
     oc, through = _load_combined()
@@ -268,7 +291,7 @@ def main() -> int:
         _dump("regionals", regionals(oc)),
         _dump("vehicles", vehicles(o, v, p)),
     ]
-    for name, fn in (("effects", effects), ("risk", risk), ("whatif", whatif)):
+    for name, fn in (("effects", effects), ("risk", risk), ("whatif", whatif), ("congestion", congestion)):
         obj = fn()
         if obj:
             written.append(_dump(name, obj))

@@ -85,6 +85,9 @@ export interface WhatIf {
   speed: { locations: number; mean_speed: number; base: number; exponent: [number, number]; curve: (WIBand & { dv: number })[] } | null;
 }
 
+export interface CongSite { name: string; where: string; dir: string; lat: number; lon: number; worst: number; worst_hour: number; hours: number; free_flow: number; strip: (number | null)[] }
+export interface Congestion { sites: CongSite[]; sites_total: number; first_day?: string; last_day?: string; days?: number; months?: number }
+
 export interface Data {
   summary: Summary;
   yearly: YearRow[];
@@ -95,6 +98,7 @@ export interface Data {
   effects: Effects | null;
   risk: Risk | null;
   whatif: WhatIf | null;
+  congestion: Congestion | null;
 }
 
 const base = `${import.meta.env.BASE_URL}data/`;
@@ -106,7 +110,7 @@ async function get<T>(name: string): Promise<T> {
 }
 
 export async function loadCore(): Promise<Data> {
-  const [summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif] = await Promise.all([
+  const [summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif, congestion] = await Promise.all([
     get<Summary>("summary"),
     get<YearRow[]>("yearly"),
     get<Clock>("clock"),
@@ -117,8 +121,9 @@ export async function loadCore(): Promise<Data> {
     get<Effects>("effects").catch(() => null),
     get<Risk>("risk").catch(() => null),
     get<WhatIf>("whatif").catch(() => null),
+    get<Congestion>("congestion").catch(() => null),
   ]);
-  return { summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif };
+  return { summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif, congestion };
 }
 
 // Hexes are the largest file; only fetched when the map scene is near.

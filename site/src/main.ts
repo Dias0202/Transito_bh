@@ -17,6 +17,7 @@ import { buildBuses, busesMotion } from "./scenes/buses";
 import { buildRain, rainMotion, rainText } from "./scenes/rain";
 import { buildRisk, riskMotion, riskText } from "./scenes/risk";
 import { buildWhatIf, whatIfMotion, whatIfText } from "./scenes/whatif";
+import { buildCongestion, congestionMotion, congestionText } from "./scenes/congestion";
 import { frontsText, methodText } from "./scenes/content";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -65,6 +66,7 @@ function applyText(c: Ctx) {
   rainText(c);
   riskText(c);
   whatIfText(c);
+  congestionText(c);
   frontsText(c);
   methodText(c);
 }
@@ -161,6 +163,7 @@ async function boot() {
   buildRain(d.effects?.events);
   buildRisk(d.risk);
   buildWhatIf(d.whatif);
+  buildCongestion(d.congestion);
   applyText(ctx);
 
   document.querySelector("[data-lang-toggle]")!.addEventListener("click", () => {
@@ -181,6 +184,7 @@ async function boot() {
     clockMotion(false);
     whoMotion();
     rainMotion(false);
+    congestionMotion(false);
     riskMotion(false);
   });
   mm.add(REDUCED, () => {

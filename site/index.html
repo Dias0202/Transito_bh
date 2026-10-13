@@ -26,6 +26,7 @@
           <ol class="nav__links">
             <li><a href="#decade" data-i18n="nav.decade"></a></li>
             <li><a href="#clock" data-i18n="nav.clock"></a></li>
+            <li><a href="#congestion" data-i18n="nav.congestion"></a></li>
             <li><a href="#map" data-i18n="nav.map"></a></li>
             <li><a href="#who" data-i18n="nav.who"></a></li>
             <li><a href="#rain" data-i18n="nav.rain"></a></li>
@@ -97,6 +98,23 @@
             <div class="heatmap" data-heatmap></div>
             <figcaption class="caption" data-i18n="clock.caption"></figcaption>
             <div class="sr-only"><table data-heatmap-table></table></div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 3b. Where traffic stops: radar speed index -->
+      <section class="scene congestion" id="congestion" data-theme="light" data-scene="congestion">
+        <div class="wrap">
+          <header class="scene__head">
+            <p class="eyebrow" data-reveal data-i18n="cong.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="cong.title"></h2>
+            <p class="lead" data-reveal data-i18n="cong.lead"></p>
+          </header>
+          <figure class="cg__fig">
+            <p class="cg__legend caption" aria-hidden="true"><span data-i18n="cong.legendFree"></span><i class="cg__ramp"></i><span data-i18n="cong.legendSlow"></span></p>
+            <ol class="cg__list" data-cong></ol>
+            <div class="cg__axisrow" aria-hidden="true"><span></span><span class="cg__axis" data-cong-axis></span><span></span></div>
+            <figcaption class="caption" data-i18n="cong.caption"></figcaption>
           </figure>
         </div>
       </section>
