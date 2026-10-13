@@ -30,6 +30,10 @@ BLOCKED = {
 TOMTOM_CRON = "7,37 9-12,19-22 * * 1-5"
 
 
+BUS_ONLY = "bus-only"  # workflow_dispatch input used by off-peak dispatches
+
+
 def tomtom_due(schedule: str | None) -> bool:
-    """TomTom runs on its own cron line or on a manual dispatch (schedule unset)."""
+    """TomTom runs on its own cron line or on a full manual dispatch (schedule unset).
+    Any other cron line, and dispatches with mode 'bus-only', skip it."""
     return not schedule or schedule == TOMTOM_CRON

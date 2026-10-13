@@ -69,6 +69,8 @@ def test_tomtom_skipped_off_budget_schedule():
     assert budget.tomtom_due(None)
     assert budget.tomtom_due(budget.TOMTOM_CRON)
     assert not any(budget.tomtom_due(c) for c in _crons() if c != budget.TOMTOM_CRON)
+    assert not budget.tomtom_due(budget.BUS_ONLY)
+    assert "inputs.mode" in WORKFLOW
 
 
 def test_here_blocked_and_key_not_passed(tmp_path, monkeypatch):

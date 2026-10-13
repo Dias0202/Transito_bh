@@ -17,6 +17,11 @@ on:
     - cron: "37 0-8,13-18,23 * * 1-5"         # weekday off-peak: hourly
     - cron: "37 * * * 0,6"                     # weekends: hourly
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "'' = full run (TomTom + bus); 'bus-only' = skip TomTom (off-peak dispatches)"
+        required: false
+        default: ""
 
 concurrency:
   group: collector
@@ -65,7 +70,7 @@ jobs:
       - name: Collect snapshot
         env:
           TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
-          BHTRAFFIC_SCHEDULE: ${{ github.event.schedule }}
+          BHTRAFFIC_SCHEDULE: ${{ github.event.schedule || inputs.mode }}
           PYTHONPATH: src
         run: python3 -m bhtraffic.collect.run --out out
 
