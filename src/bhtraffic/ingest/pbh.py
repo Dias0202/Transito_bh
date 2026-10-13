@@ -29,10 +29,16 @@ DATASETS = {
     "sinistros_pessoas": "relacao-das-pessoas-envolvidas-nos-acidentes-de-transito-com-vitima",
     "sinistros_logradouros": "relacao-dos-logradouros-dos-locais-de-acidentes-de-transito-com-vitima",
     "ponto_onibus": "ponto-de-onibus",
+    # Monthly snapshots, 2016 -> current month (point geometry, no vehicles/people).
+    "sinistros_mensal": "ocorrencia-sinistro-transito-com-vitima",
+    # Monthly snapshots of enforcement devices since 2022-06: every snapshot is kept,
+    # because the history (installs/removals) is the point.
+    "fiscalizacao": "fiscalizacao-eletronica",
+    "redutores": "redutor-de-velocidade",
 }
 
 # Datasets published as one snapshot per month: only the latest is needed.
-LATEST_ONLY = {"ponto_onibus"}
+LATEST_ONLY = {"ponto_onibus", "sinistros_mensal", "redutores"}
 
 _session = requests.Session()
 _session.headers["User-Agent"] = HTTP_USER_AGENT
@@ -55,7 +61,8 @@ def csv_resources(dataset_key: str) -> list[dict]:
         if r["url"].lower().endswith(".csv") and "dicion" not in r["name"].lower()
     ]
     if dataset_key in LATEST_ONLY:
-        res = sorted(res, key=lambda r: r["name"])[-1:]
+        # File names start with the snapshot date (YYYYMMDD_...); resource titles are inconsistent.
+        res = sorted(res, key=lambda r: Path(r["url"]).name)[-1:]
     return res
 
 
@@ -104,7 +111,11 @@ def read_pbh_csv(path: Path) -> pd.DataFrame:
         text = raw.decode("utf-8")
     except UnicodeDecodeError:
         text = raw.decode("latin-1")
-    df = pd.read_csv(io.StringIO(text), sep=";", dtype=str, keep_default_na=False)
+    text = text.lstrip("\ufeff")
+    # Most files use ';', but some monthly snapshots (fiscalizacao 2022-23) use ','.
+    header = text.split("\n", 1)[0]
+    sep = ";" if header.count(";") >= header.count(",") else ","
+    df = pd.read_csv(io.StringIO(text), sep=sep, dtype=str, keep_default_na=False)
     df.columns = [_norm_col(c) for c in df.columns]
     df = df.loc[:, [c for c in df.columns if c]]  # trailing ';' creates an empty column
     for c in df.columns:
