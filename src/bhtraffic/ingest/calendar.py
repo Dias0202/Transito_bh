@@ -78,7 +78,7 @@ def matches_table(raw_csv: str | None = None) -> pd.DataFrame:
     )
 
 
-def build(years: range = range(2010, 2026)) -> list[Path]:
+def build(years: range = range(2010, 2028)) -> list[Path]:
     out = processed_dir("calendar")
     h, m = holidays_table(years), matches_table()
     h.to_parquet(out / "holidays.parquet", index=False)

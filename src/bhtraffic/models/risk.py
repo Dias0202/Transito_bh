@@ -4,8 +4,8 @@ Unit of analysis is a cell-slot (H3 res 8 cell, weekday 0-6, hour 0-23). For a
 target year Y the features use only years < Y (no leakage); the label is the
 number of injury crashes in that cell-slot during Y.
 
-    train: target 2023, history 2018-2022
-    test:  target 2024, history 2019-2023
+    train: target 2024, history 2019-2023
+    test:  target 2025, history 2020-2024
 
 Model: LightGBM with Poisson objective. Baselines: (a) mean count of the same
 cell-slot over the previous 3 years; (b) the cell's yearly mean x the citywide
@@ -30,14 +30,18 @@ from bhtraffic.config import processed_dir
 
 HISTORY = 5
 SHRINK = 30
-TEST_YEAR = 2024
+TEST_YEAR = 2025
 TOP_K = (0.01, 0.05, 0.10)
 CATEGORICAL = ["regional"]
 
 
 def load_crashes() -> pd.DataFrame:
+    """Crashes 2011 -> last complete month. Vehicle mix and speed limit exist only up to
+    2024 (yearly dataset); they are used as *history* features, so a 2025 target is fine."""
     base = processed_dir() / "sinistros"
-    o = pd.read_parquet(base / "ocorrencias.parquet")
+    o = pd.read_parquet(base / "ocorrencias_2011_2026.parquet")
+    old = pd.read_parquet(base / "ocorrencias.parquet", columns=["boletim", "velocidade_permitida"])
+    o = o.merge(old, on="boletim", how="left")
     v = pd.read_parquet(base / "veiculos.parquet")
     o = o[o["h3"].notna() & ~o["coord_placeholder"] & o["hora_informada"] & o["hour"].notna()].copy()
     o["hour"] = o["hour"].astype(int)

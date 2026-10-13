@@ -44,9 +44,12 @@ def _haversine_km(lat1, lon1, lat2, lon2):
 
 
 def load_inputs():
+    """Crashes 2011 -> last complete month (yearly + monthly datasets, see ingest.recentes)."""
     s = processed_dir("sinistros")
-    o = pd.read_parquet(s / "ocorrencias.parquet")
-    o = o[o["hora_informada"] & o["hour"].notna()].copy()
+    o = pd.read_parquet(s / "ocorrencias_2011_2026.parquet")
+    through = pd.Timestamp((s / "ocorrencias_2011_2026.complete_through.txt").read_text().strip())
+    o = o[o["hora_informada"] & o["hour"].notna() & (o["dt"] < through + pd.Timedelta(days=1))].copy()
+    o.attrs["through"] = through
     o["ts"] = o["dt"].dt.floor("h")
     cal = processed_dir("calendar")
     hol = pd.read_parquet(cal / "holidays.parquet")
@@ -57,9 +60,10 @@ def load_inputs():
 
 
 def hourly_frame(hol: pd.DataFrame, mat: pd.DataFrame, weather: pd.DataFrame | None,
-                 years=YEARS) -> pd.DataFrame:
-    """Hour grid with calendar/weather covariates (no outcome)."""
-    ts = pd.date_range(f"{years[0]}-01-01", f"{years[1]}-12-31 23:00", freq="h")
+                 years=YEARS, end: pd.Timestamp | None = None) -> pd.DataFrame:
+    """Hour grid with calendar/weather covariates (no outcome). `end` overrides years[1]."""
+    last = end + pd.Timedelta(hours=23) if end is not None else pd.Timestamp(f"{years[1]}-12-31 23:00")
+    ts = pd.date_range(f"{years[0]}-01-01", last, freq="h")
     f = pd.DataFrame({"ts": ts})
     f["date"] = f["ts"].dt.normalize()
     f["hour"], f["weekday"] = f["ts"].dt.hour, f["ts"].dt.weekday
@@ -145,20 +149,30 @@ def stadium_frame(f: pd.DataFrame, crashes: pd.DataFrame, mat: pd.DataFrame, sta
     return g[g["ts"] >= first]  # only years the stadium was in use
 
 
+MATCH_DATA_END = pd.Timestamp("2024-12-31 23:00")  # Brasileirão dataset ends with the 2024 season
+
+
 def main() -> None:
     crashes, hol, mat, weather = load_inputs()
-    f = hourly_frame(hol, mat, weather)
+    through = crashes.attrs["through"]
+    f = hourly_frame(hol, mat, weather, end=through)
     df = add_outcome(f, crashes)
-    events = EVENTS + (WEATHER if weather is not None else [])
-    city = fit_glm(df, events)
-    out = processed_dir("models", "temporal")
-    in_frame = mat["kickoff"].between(df["ts"].min(), df["ts"].max())
-    res = {"city": irr_table(city, events).to_dict("records"), "n_hours": len(df), "crashes": int(df["y"].sum()),
+    wx = WEATHER if weather is not None else []
+    # Holidays and rain: the whole period. Matches: only hours the match data covers,
+    # otherwise 2025-26 games would be counted as "no match" hours.
+    calendar_ev = [e for e in EVENTS if e not in ("match", "classico")] + wx
+    city = fit_glm(df, calendar_ev)
+    dm = df[df["ts"] <= MATCH_DATA_END]
+    match_fit = fit_glm(dm, EVENTS + wx)
+    rows = irr_table(city, calendar_ev).assign(period=f"{df.ts.min().year}-{through.date()}").to_dict("records")
+    rows += irr_table(match_fit, ["match", "classico"]).assign(period=f"{dm.ts.min().year}-2024").to_dict("records")
+    in_frame = mat["kickoff"].between(dm["ts"].min(), dm["ts"].max())
+    res = {"city": rows, "n_hours": len(df), "crashes": int(df["y"].sum()), "through": str(through.date()),
            "matches_in_frame": int(in_frame.sum()), "classicos_in_frame": int(mat.loc[in_frame, "classico"].sum()),
            "pearson_dispersion": float(city.pearson_chi2 / city.df_resid)}
     res["stadiums"] = {}
     for st in sorted(mat["stadium"].unique()):
-        g = stadium_frame(f, crashes, mat, st)
+        g = stadium_frame(f[f["ts"] <= MATCH_DATA_END], crashes, mat, st)
         ev = ["holiday", "carnaval", "match"] + (["rain_any"] if weather is not None else [])
         try:
             m = fit_glm(g, ev)
@@ -166,6 +180,7 @@ def main() -> None:
                                    "match_hours": int(g["match"].sum()), "crashes_in_match_hours": int(g.loc[g["match"] == 1, "y"].sum())}
         except Exception as e:  # sparse stadium series can fail to converge; report, don't hide
             res["stadiums"][st] = {"error": repr(e)}
+    out = processed_dir("models", "temporal")
     (out / "effects.json").write_text(json.dumps(res, indent=2, ensure_ascii=False), "utf-8")
     df.to_parquet(out / "hourly.parquet", index=False)
     print(json.dumps(res, indent=2, ensure_ascii=False))
