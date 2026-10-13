@@ -201,8 +201,10 @@
   color: var(--fg-muted);
 }
 .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1px solid currentColor; }
-.chip--collecting { color: var(--accent-text); }
-.chip--collecting::before { background: currentColor; }
+.chip--collecting,
+.chip--result { color: var(--accent-text); }
+.chip--collecting::before,
+.chip--result::before { background: currentColor; }
 @media (max-width: 760px) {
   .fronts { grid-template-columns: 1fr; }
   .front, .front:nth-child(even) { padding: var(--s-6) 0; border-right: 0; }

@@ -71,13 +71,45 @@ and pedestrians (32%) account for 80% (@fig-users).
 presence in injury crashes is the starting point for the risk model. Caveats: short sample, and radar classification
 may undercount motorcycles riding between lanes.
 
+# Crash risk: first result
+
+**Question.** How many injury crashes to expect in each H3 hexagon (res. 8, ~0.7 km²) in each hour of the week?
+**Design.** 427 cells × 7 days × 24 h = 71,736 cell-hours. Features use only years before the target year
+(no leakage): training predicts 2023 from 2018–2022 history; testing predicts 2024 from 2019–2023 history.
+Crashes without coordinates, without time, or at the default geocoding spot are excluded (12,081 remain in 2024).
+**Models.** LightGBM with Poisson loss [@ke2017lightgbm] against two baselines: (a) 3-year mean of the same
+cell-hour; (b) the cell's yearly rate × the citywide hourly profile.
+
+![Risk concentration in 2024: share of crashes in the top-k% cell-hours by predicted risk.](../figures/risk_capture_en.png){#fig-risk-capture}
+
+| 2024 (test) | Top 1% | Top 5% | Top 10% | Poisson deviance |
+|---|---|---|---|---|
+| LightGBM | 7.3% | 23.0% | 37.2% | 0.507 |
+| Cell rate × hourly profile | 7.1% | 22.6% | 36.8% | 0.509 |
+| 3-year mean of cell-hour | 5.5% | 18.1% | 29.6% | 3.14¹ |
+
+: Share of 2024 crashes captured when prioritising the top-k% cell-hours by predicted risk. ¹ Inflated by zero predictions in cell-hours with no history. {#tbl-risk}
+
+**Result.** Risk is concentrated: **5% of cell-hours hold 23% of crashes** (4.6× chance), 10% hold 37%
+(@fig-risk-capture). But LightGBM **ties** with baseline (b): in a cell-block bootstrap (500 replicates) the 95% CI
+of the deviance difference is [−0.007, +0.002] and of the top-5% capture difference is [−0.2, +0.9] pp — both
+include zero. With crash history alone, risk is almost separable into *where* × *when*; SHAP agrees: cell rate
+and the citywide hourly profile dominate (@fig-risk-shap).
+
+![Feature importance (mean |SHAP|, sample of 5,000 cell-hours in 2024).](../figures/risk_shap_en.png){#fig-risk-shap}
+
+**Implication.** To prioritise enforcement and engineering today, a transparent ranking (rate × profile) is enough.
+ML gains should come from **new exogenous features** — radar volumes and speeds, TomTom delay, OpenStreetMap road
+geometry — not from a bigger model. Next: repeat with those features and model motorcycle crashes and
+pedestrian collisions separately.
+
 # Machine-learning methods (planned)
 
 1. **Congestion forecasting.** Spatio-temporal graph networks [@li2018dcrnn; @yu2018stgcn; @wu2019graphwavenet]
    predicting per-segment speed 15–60 min ahead from radars, TomTom and bus GPS. Baselines: historical mean per
    segment × hour and a seasonal naive model. Walk-forward validation.
-2. **Crash risk.** LightGBM [@ke2017lightgbm] per H3 hexagon × hour, explained with SHAP [@lundberg2017shap].
-   Train through 2022, test on 2023–2024, no temporal leakage.
+2. **Crash risk (v1).** Same design as the previous section, explained with SHAP [@lundberg2017shap],
+   adding exposure (radars, TomTom) and road-geometry (OSM) features.
 3. **Adaptive signals.** Reinforcement learning in SUMO microsimulation [@lopez2018sumo] of pilot areas,
    compared with fixed-time plans (mean delay, queues, stops).
 4. **Bus priority.** Dedicated-lane and signal-priority scenarios evaluated with the fleet's real GPS.

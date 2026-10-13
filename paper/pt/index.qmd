@@ -71,13 +71,45 @@ motociclistas (48 %) e pedestres (32 %) somam 80 % (@fig-users).
 presença nos sinistros com vítima é o ponto de partida do modelo de risco. Ressalvas: amostra curta, e a classificação
 dos radares pode subcontar motos que trafegam entre faixas.
 
+# Risco de sinistro: primeiro resultado
+
+**Pergunta.** Quantos sinistros com vítima esperar em cada hexágono H3 (res. 8, ~0,7 km²) em cada hora da semana?
+**Desenho.** 427 células × 7 dias × 24 h = 71.736 célula-horários. As variáveis usam só anos anteriores ao ano-alvo
+(sem vazamento): treino prevê 2023 com histórico 2018–2022; teste prevê 2024 com histórico 2019–2023.
+Ficam fora sinistros sem coordenada, sem hora ou no ponto padrão de geocodificação (restam 12.081 em 2024).
+**Modelos.** LightGBM com perda de Poisson [@ke2017lightgbm] contra duas linhas de base: (a) média dos últimos 3 anos
+do mesmo célula-horário; (b) taxa anual da célula × perfil horário da cidade.
+
+![Concentração do risco em 2024: fração dos sinistros que cai nos k % célula-horários de maior risco previsto.](../figures/risk_capture_pt.png){#fig-risk-capture}
+
+| 2024 (teste) | Top 1 % | Top 5 % | Top 10 % | Deviance de Poisson |
+|---|---|---|---|---|
+| LightGBM | 7,3 % | 23,0 % | 37,2 % | 0,507 |
+| Taxa da célula × perfil horário | 7,1 % | 22,6 % | 36,8 % | 0,509 |
+| Média 3 anos do célula-horário | 5,5 % | 18,1 % | 29,6 % | 3,14¹ |
+
+: Fração dos sinistros de 2024 capturada ao priorizar os k % célula-horários de maior risco previsto. ¹ Inflada por previsões zero em célula-horários sem histórico. {#tbl-risk}
+
+**Resultado.** O risco é concentrado: **5 % dos célula-horários reúnem 23 % dos sinistros** (4,6× o acaso),
+10 % reúnem 37 % (@fig-risk-capture). Mas o LightGBM **empata** com a linha de base (b): no *bootstrap* por célula
+(500 réplicas), o IC 95 % da diferença de deviance é [−0,007; +0,002] e o da captura no top 5 % é [−0,2; +0,9] p.p. —
+ambos incluem zero. Com apenas o histórico de sinistros, o risco é quase separável em *onde* × *quando*;
+o SHAP confirma: taxa da célula e perfil horário da cidade dominam (@fig-risk-shap).
+
+![Importância das variáveis (|SHAP| médio, amostra de 5.000 célula-horários de 2024).](../figures/risk_shap_pt.png){#fig-risk-shap}
+
+**Implicação.** Para priorizar fiscalização e engenharia hoje, um ranking transparente (taxa × perfil) basta.
+Ganho de ML deve vir de **novas variáveis exógenas** — volume e velocidade dos radares, atraso do TomTom,
+geometria viária do OpenStreetMap —, não de um modelo maior. Próximo passo: repetir com essas variáveis
+e modelar separadamente sinistros com moto e atropelamentos.
+
 # Métodos de aprendizado de máquina (planejado)
 
 1. **Previsão de congestionamento.** Redes em grafo espaço-temporais [@li2018dcrnn; @yu2018stgcn; @wu2019graphwavenet]
    para prever velocidade por trecho 15–60 min à frente, com radares, TomTom e GPS dos ônibus. Linha de base: média histórica
    por trecho × hora e modelo sazonal ingênuo. Validação *walk-forward*.
-2. **Risco de sinistro.** LightGBM [@ke2017lightgbm] por hexágono H3 × hora, explicado com SHAP [@lundberg2017shap].
-   Treino até 2022, teste 2023–2024, sem vazamento temporal.
+2. **Risco de sinistro (v1).** Mesmo desenho da seção anterior, explicado com SHAP [@lundberg2017shap],
+   acrescentando variáveis de exposição (radares, TomTom) e de geometria viária (OSM).
 3. **Semáforos adaptativos.** Aprendizado por reforço em microssimulação SUMO [@lopez2018sumo] de áreas piloto,
    comparado a planos de tempo fixo (atraso médio, filas, paradas).
 4. **Prioridade para ônibus.** Cenários de faixa exclusiva e prioridade semafórica avaliados com GPS real da frota.
