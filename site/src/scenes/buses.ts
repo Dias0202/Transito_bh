@@ -1,5 +1,4 @@
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { BusSnapshot } from "../lib/data";
 import { prefersReduced } from "../motion/tokens";
 
@@ -68,10 +67,12 @@ export function busesMotion() {
   }
   progress.p = 0;
   draw();
-  ScrollTrigger.create({
-    trigger: canvas,
-    start: "top 75%",
-    once: true,
-    onEnter: () => gsap.to(progress, { p: 1, duration: 1.2, ease: "power1.inOut", onUpdate: draw }),
+  // Tween-bound trigger: completes immediately when the page loads past it.
+  gsap.to(progress, {
+    p: 1,
+    duration: 1.2,
+    ease: "power1.inOut",
+    onUpdate: draw,
+    scrollTrigger: { trigger: canvas, start: "top 75%", once: true },
   });
 }

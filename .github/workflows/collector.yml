@@ -25,6 +25,10 @@ env:
 
 jobs:
   collect:
+    # Scheduled runs stay off until the repo variable COLLECTOR_ENABLED=true is set
+    # (after secrets exist and a manual run succeeded). A job skipped here gets no
+    # runner, so it is not billed. Manual dispatch always runs.
+    if: github.event_name == 'workflow_dispatch' || vars.COLLECTOR_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:

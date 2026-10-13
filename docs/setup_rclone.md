@@ -49,6 +49,16 @@ GitHub → **Actions → collector → Run workflow**. Confira:
 - **duração cobrada do job** (aba *Usage*/resumo do run). Precisa ficar ≤ 60 s para caber em 2.000 min/mês.
   Se passar, reduza a cadência para 30 min ou mova o coletor para um repositório público separado.
 
+## 6. Ligar o cron
+
+O agendamento fica **desligado** até existir a variável do repositório `COLLECTOR_ENABLED`.
+Depois que um *Run workflow* manual gravar no Drive e durar ≤ 60 s:
+**Settings → Secrets and variables → Actions → Variables → New repository variable** →
+`COLLECTOR_ENABLED` = `true`. Para pausar, mude para `false`.
+
+> Ordem recomendada: **rclone primeiro**. O GPS dos ônibus não precisa de chave e a PBH não guarda histórico —
+> cada dia sem Drive configurado é dado perdido. Chaves TomTom/HERE podem vir depois (o coletor pula o que não tiver chave).
+
 ## Manutenção
 
 - Se o job começar a falhar em "Upload to Google Drive", gere o token de novo (`rclone config reconnect gdrive:`) e atualize o secret.

@@ -27,7 +27,8 @@ Repositório → **Settings → Secrets and variables → Actions → New reposi
 | `HERE_API_KEY` | chave HERE |
 | `RCLONE_CONF` | conteúdo do `rclone.conf` (ver [setup_rclone.md](setup_rclone.md)) |
 
-Localmente, copie `.env.example` para `.env` (nunca versionado) e preencha.
+Localmente, defina as variáveis no shell antes de rodar (o código lê só variáveis de ambiente;
+`.env.example` lista os nomes — se usar um `.env`, carregue-o com seu shell/IDE, ele nunca é versionado).
 
 ## Termos de uso — leia antes de publicar
 

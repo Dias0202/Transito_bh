@@ -101,20 +101,20 @@ function reveals() {
     const els = g.querySelectorAll<HTMLElement>("[data-reveal]");
     if (!els.length) continue;
     const dist = (el: HTMLElement) => (el.tagName === "H2" ? shift("lg") : el.classList.contains("eyebrow") ? shift("sm") : shift("md"));
-    gsap.set(els, { opacity: 0, y: (_i: number, el: HTMLElement) => dist(el) });
-    ScrollTrigger.create({
-      trigger: els[0],
-      start: "top 85%",
-      once: true,
-      onEnter: () =>
-        gsap.to(els, {
-          opacity: 1,
-          y: 0,
-          duration: DUR.section,
-          ease: EASE.outQuart,
-          stagger: STAGGER * 1.5,
-        }),
-    });
+    // Tween-bound trigger (not an onEnter callback): if the page loads already
+    // past it (deep link, restored scroll), GSAP renders the end state.
+    gsap.fromTo(
+      els,
+      { opacity: 0, y: (_i: number, el: HTMLElement) => dist(el) },
+      {
+        opacity: 1,
+        y: 0,
+        duration: DUR.section,
+        ease: EASE.outQuart,
+        stagger: STAGGER * 1.5,
+        scrollTrigger: { trigger: els[0], start: "top 85%", once: true },
+      },
+    );
   }
   // ML fronts enter as a group, one after another.
   gsap.from("[data-fronts] .front", {

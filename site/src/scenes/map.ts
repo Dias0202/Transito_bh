@@ -114,8 +114,16 @@ function go(i: number, instant = false) {
 }
 
 export function mapMotion() {
-  // Lazy-init one viewport ahead of the scene.
-  ScrollTrigger.create({ trigger: "#map", start: "top bottom+=100%", once: true, onEnter: initMap });
+  // Lazy-init one viewport ahead of the scene. Callbacks don't fire for a trigger
+  // the page loaded past (deep link), so also check progress after creation.
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    void initMap();
+  };
+  const lazy = ScrollTrigger.create({ trigger: "#map", start: "top bottom+=100%", onEnter: start, onEnterBack: start });
+  if (lazy.progress > 0) start();
   document.querySelectorAll<HTMLElement>("[data-chapter]").forEach((el, i) =>
     ScrollTrigger.create({
       trigger: el,

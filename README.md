@@ -73,7 +73,7 @@ see [docs/setup_api_keys.md](docs/setup_api_keys.md) and [docs/setup_rclone.md](
 
 ## Dados · Data
 
-Raw and processed data live on Google Drive (`MyDrive/transito_bh`), never in git. Only aggregates are published.
+Raw and processed data live on Google Drive (`MyDrive/transito_bh`), never in git. Only aggregates are published, plus one bus-position snapshot without vehicle or line IDs (`site/public/data/bus.json`).
 Quirks and fixes: [docs/data_audit.md](docs/data_audit.md).
 
 ## Licença · License

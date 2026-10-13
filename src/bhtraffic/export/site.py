@@ -1,6 +1,7 @@
 """Export aggregated, real data for the scrollytelling site (site/public/data).
 
-Only aggregates leave the package: no raw rows, no personal data.
+Only aggregates leave the package, plus one bus-position snapshot (lon, lat,
+speed; no vehicle or line IDs). No personal data.
 
     python -m bhtraffic.export.site            # writes site/public/data/*.json
 """
