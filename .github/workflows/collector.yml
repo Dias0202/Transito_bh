@@ -9,6 +9,7 @@ name: collector
 # - HERE: blocked in code (account has a card, no spending cap); no key passed.
 # tests/test_budget.py enforces these numbers. Minutes avoid :00 because
 # GitHub delays/drops cron jobs at the top of the hour. Times are UTC (BRT = UTC-3).
+# Schedules re-registered 2026-10-13 (no scheduled run had fired after the first push).
 on:
   schedule:
     - cron: "7,37 9-12,19-22 * * 1-5"         # weekday peaks 06-10h/16-20h BRT, :07/:37 -> bus + TomTom
