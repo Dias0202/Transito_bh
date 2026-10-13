@@ -34,6 +34,9 @@ L = {
         "capture_x": "Célula-horários priorizados (% do total)",
         "series": {"model": "LightGBM (Poisson)", "cellxprofile": "Taxa da célula × perfil horário", "baseline": "Média 3 anos do mesmo célula-horário", "random": "Aleatório"},
         "shap_title": "O que o modelo usa: |SHAP| médio por variável",
+        "irr_title": "Efeito sobre sinistros por hora (razão de taxas, IC 95%), BH 2011–2024",
+        "irr_x": "Razão de taxas (1 = sem efeito)",
+        "events": {"holiday": "Feriado", "optional_day": "Ponto facultativo", "carnaval": "Carnaval", "holiday_eve": "Véspera de feriado", "day_after_holiday": "Dia após feriado", "match": "Jogo Série A em BH (−2h a +3h)", "classico": "Clássico (adicional)", "rain_any": "Chuva na hora", "rain_heavy": "Chuva forte ≥5 mm (adicional)", "first_rain": "Primeira chuva após 72h seco (adicional)"},
         "features": {"cell_total": "Sinistros/ano na célula", "city_slot_share": "Perfil horário da cidade", "cell_last": "Sinistros na célula, ano anterior", "hour": "Hora", "cell_hour_share": "Perfil horário da célula", "cell_moto_share": "% com moto na célula", "lon": "Longitude", "slot_mean5": "Média 5 anos do célula-horário", "weekday": "Dia da semana", "regional": "Regional", "cell_speed_limit": "Velocidade máxima (mediana)", "cell_weekday_share": "Perfil semanal da célula", "slot_mean3": "Média 3 anos do célula-horário", "ring1_total": "Sinistros nas 6 células vizinhas", "lat": "Latitude", "cell_fatal_share": "% fatais na célula", "slot_last": "Célula-horário, ano anterior"},
     },
     "en": {
@@ -48,6 +51,9 @@ L = {
         "capture_x": "Cell-hours prioritised (% of all)",
         "series": {"model": "LightGBM (Poisson)", "cellxprofile": "Cell rate × hourly profile", "baseline": "3-year mean of same cell-hour", "random": "Random"},
         "shap_title": "What the model uses: mean |SHAP| per feature",
+        "irr_title": "Effect on hourly crashes (rate ratio, 95% CI), BH 2011–2024",
+        "irr_x": "Rate ratio (1 = no effect)",
+        "events": {"holiday": "Public holiday", "optional_day": "Optional day off", "carnaval": "Carnaval", "holiday_eve": "Holiday eve", "day_after_holiday": "Day after holiday", "match": "Série A match in BH (−2h to +3h)", "classico": "Derby (additional)", "rain_any": "Rain in the hour", "rain_heavy": "Heavy rain ≥5 mm (additional)", "first_rain": "First rain after 72h dry (additional)"},
         "features": {"cell_total": "Crashes/year in cell", "city_slot_share": "Citywide hourly profile", "cell_last": "Crashes in cell, previous year", "hour": "Hour", "cell_hour_share": "Cell hourly profile", "cell_moto_share": "% involving motorcycle in cell", "lon": "Longitude", "slot_mean5": "5-year mean of cell-hour", "weekday": "Weekday", "regional": "District", "cell_speed_limit": "Speed limit (median)", "cell_weekday_share": "Cell weekly profile", "slot_mean3": "3-year mean of cell-hour", "ring1_total": "Crashes in 6 neighbour cells", "lat": "Latitude", "cell_fatal_share": "% fatal in cell", "slot_last": "Cell-hour, previous year"},
     },
 }
@@ -152,6 +158,27 @@ def risk_shap(shap_mean_abs: dict, lang: str = "pt", top: int = 10) -> Path:
     ax.barh([L[lang]["features"].get(k, k) for k in s.index], s.values, color=["#A79F94"] * (len(s) - 2) + [AMBER] * 2)
     ax.set_title(L[lang]["shap_title"], loc="left", fontsize=10, color=TEXT)
     return _save(fig, "risk_shap", lang)
+
+
+def effects(irr: list[dict], lang: str = "pt") -> Path:
+    """Forest plot of incidence-rate ratios from bhtraffic.models.temporal."""
+    d = pd.DataFrame(irr)
+    d = d[d["event"].isin(L[lang]["events"])].iloc[::-1]
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+    _style(ax)
+    y = np.arange(len(d))
+    sig = (d["ci_low"] > 1) | (d["ci_high"] < 1)
+    colors = np.where(sig & (d["irr"] > 1), AMBER, np.where(sig, TEXT, "#A79F94"))
+    ax.hlines(y, d["ci_low"], d["ci_high"], color=colors, lw=2)
+    ax.scatter(d["irr"], y, color=colors, zorder=3)
+    ax.axvline(1, color=RULE, lw=1)
+    ax.set_yticks(y, [L[lang]["events"][e] for e in d["event"]])
+    ax.set_xscale("log")
+    ax.set_xticks([0.5, 0.7, 1, 1.4], ["0.5", "0.7", "1", "1.4"])
+    ax.xaxis.set_minor_formatter(plt.NullFormatter())
+    ax.set_xlabel(L[lang]["irr_x"], color=MUTED, fontsize=9)
+    ax.set_title(L[lang]["irr_title"], loc="left", fontsize=10, color=TEXT)
+    return _save(fig, "effects", lang)
 
 
 def all_figures(o: pd.DataFrame, p: pd.DataFrame, recent: tuple[int, int]) -> list[Path]:

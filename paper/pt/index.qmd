@@ -30,7 +30,10 @@ de usuário da via; e (ii) avaliar, com dados reais e simulação, intervençõe
 | Contagem volumétrica de radares [@pbh_radares] | 2021–2023 | volume, velocidade, mix veicular |
 | GPS dos ônibus em tempo real (PBH) | coleta própria | velocidade comercial |
 | TomTom Routing | coleta própria (cota grátis) | tempo de viagem por corredor |
-| OpenStreetMap; grade H3 res. 8 [@h3] | — | malha viária, agregação espacial |
+| OpenStreetMap; grade H3 res. 8 [@h3] | snapshot 2026 | malha viária, agregação espacial |
+| INMET, estação A521 Pampulha [@inmet] | 2011–2024, horária | chuva |
+| Feriados nacionais, MG e BH (pacote `holidays` + leis municipais) | 2011–2024 | calendário |
+| Brasileirão Série A [@brasileirao_dataset] | 2012–2024 | jogos em BH |
 
 O tratamento dos dados está documentado em `docs/data_audit.md`. Destacam-se: unificação de nomes de colunas
 que mudam entre anos; conversão das coordenadas de 2011–2015 para o padrão UTM dos anos seguintes; e remoção
@@ -71,6 +74,36 @@ motociclistas (48 %) e pedestres (32 %) somam 80 % (@fig-users).
 presença nos sinistros com vítima é o ponto de partida do modelo de risco. Ressalvas: amostra curta, e a classificação
 dos radares pode subcontar motos que trafegam entre faixas.
 
+# Congestionamento nos radares (preliminar)
+
+Para cada radar da BHTrans, a velocidade de fluxo livre é a mediana da velocidade média dos carros entre 0h e 5h;
+o **índice de velocidade** é a velocidade de cada hora dividida por ela (1 = livre; < 0,7 = congestionado).
+Na amostra disponível — **10 dias de agosto de 2021, 88 radares**, ainda sob efeito da pandemia — os piores pontos em
+dia útil são a Av. Cristiano Machado junto ao Viaduto Paulo Mendes Campos (índice 0,36 às 17h), a Av. Raja Gabaglia
+(0,31 às 18h), a Av. Teresa Cristina (0,39 às 17h) e, no pico da manhã, Andradas, Amazonas e Antônio Carlos.
+Estes números serão refeitos com os 31 meses de radares (mar/2021–set/2023) e não devem ser lidos como ranking final.
+
+# Quando o risco muda: feriados, jogos e chuva
+
+**Desenho.** Uma linha por hora de 2011 a 2024 (122.736 horas, 184.304 sinistros com hora informada).
+GLM quase-Poisson com efeitos fixos de dia da semana × hora (168), mês, ano e período de restrições da pandemia
+(18/03/2020–30/06/2021). Cada coeficiente é uma **razão de taxas** (RT) contra horas comparáveis sem o evento.
+Feriados nacionais, de MG e municipais de BH; jogos da Série A nos estádios de BH (2012–2024, 578 partidas;
+janela de 2 h antes a 3 h depois do início); chuva horária da estação INMET A521 (Pampulha).
+
+![Efeito de eventos e chuva sobre sinistros por hora. Cinza: intervalo inclui 1.](../figures/effects_pt.png){#fig-effects}
+
+- **Chuva:** hora com chuva tem **+10,5 %** de sinistros (RT 1,105; IC 95 % 1,08–1,13). A **primeira chuva após
+  72 h de tempo seco** acrescenta **+32 %** (RT 1,32; 1,22–1,44) — compatível com a película de óleo e poeira na pista.
+- **Feriados:** −31 % (RT 0,69); Carnaval −44 %; ponto facultativo −15 %; dia seguinte ao feriado −9 %.
+  Véspera de feriado não difere de um dia comum.
+- **Jogos:** **nenhum efeito detectável** na cidade (RT 1,02; 0,98–1,06) nem num raio de 1,5 km dos estádios
+  (Mineirão RT 1,03; 0,72–1,46 — intervalo largo: só 33 sinistros em janelas de jogo).
+
+**Cautela.** Menos sinistros em feriados reflete sobretudo **menos tráfego**, não ruas mais seguras por veículo;
+o volume dos radares permitirá separar exposição de risco. A base de jogos cobre só a Série A: Mineiro, Copa do Brasil,
+Libertadores e Série B (Cruzeiro em 2020–2022) ficam de fora, o que dilui um eventual efeito.
+
 # Risco de sinistro: primeiro resultado
 
 **Pergunta.** Quantos sinistros com vítima esperar em cada hexágono H3 (res. 8, ~0,7 km²) em cada hora da semana?
@@ -97,6 +130,11 @@ ambos incluem zero. Com apenas o histórico de sinistros, o risco é quase separ
 o SHAP confirma: taxa da célula e perfil horário da cidade dominam (@fig-risk-shap).
 
 ![Importância das variáveis (|SHAP| médio, amostra de 5.000 célula-horários de 2024).](../figures/risk_shap_pt.png){#fig-risk-shap}
+
+**Versão v1 (OSM).** Acrescentar 14 variáveis de malha viária do OpenStreetMap (km por classe de via, cruzamentos,
+semáforos, faixas de pedestre, pontos de ônibus, rotatórias, faixas, limite de velocidade, mão única), escolhidas
+antes de olhar 2024, **também empata** (diferença para v0: deviance [−0,0002; +0,0018], top 5 % [−0,3; +0,4] p.p.).
+O histórico da célula já carrega a estrutura viária; o OSM só ajudaria em áreas sem histórico.
 
 **Implicação.** Para priorizar fiscalização e engenharia hoje, um ranking transparente (taxa × perfil) basta.
 Ganho de ML deve vir de **novas variáveis exógenas** — volume e velocidade dos radares, atraso do TomTom,
@@ -125,7 +163,10 @@ política em BH, alimentada pela Pesquisa Origem-Destino da RMBH.
 - A base cobre apenas sinistros **com vítima**.
 - 14,6 % dos sinistros não têm coordenada válida; ficam fora do mapa, mas contam nos totais.
 - As contagens de radares terminam em set/2023 e têm meses incompletos.
-- Os dados de tempo de viagem dependem da coleta própria, iniciada em 2026.
+- Os dados de tempo de viagem dependem da coleta própria, iniciada em 2026; 5 dos 18 corredores TomTom têm rota
+  1,7–2,2× a linha de referência (possível desvio do eixo) e estão em revisão.
+- Variáveis do OSM são de 2026, aplicadas a sinistros de 2011–2024.
+- Jogos: só Série A; chuva: uma estação (Pampulha) para a cidade toda.
 
 # Referências {.unnumbered}
 

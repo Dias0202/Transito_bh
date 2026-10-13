@@ -225,13 +225,13 @@ export interface Front { title: string; body: string; status: string; state: "co
 export const FRONTS: Record<Lang, Front[]> = {
   pt: [
     { title: "Previsão de congestionamento", body: "Redes neurais em grafo espaço-temporais preveem a velocidade por trecho de 15 a 60 minutos à frente, treinadas com tempos de viagem TomTom, radares e GPS dos ônibus.", status: "Coletor pronto", state: "collecting" },
-    { title: "Risco de sinistro", body: "Teste em 2024: 5% dos hexágono-horários concentram 23% dos sinistros. O gradient boosting empatou com um ranking simples (taxa do local × perfil horário). Próximo: incluir volume dos radares e geometria viária.", status: "Primeiro resultado", state: "result" },
+    { title: "Risco de sinistro", body: "Teste em 2024: 5% dos hexágono-horários concentram 23% dos sinistros; o gradient boosting empatou com um ranking simples (taxa do local × perfil horário), mesmo com a malha viária do OSM. No tempo, chuva soma 10% e a primeira chuva após 3 dias secos, mais 32%; feriados tiram 31%; jogos da Série A não mostraram efeito.", status: "Primeiro resultado", state: "result" },
     { title: "Semáforos adaptativos", body: "Aprendizado por reforço controla semáforos em simulações SUMO de áreas piloto e é comparado a planos de tempo fixo.", status: "Planejado", state: "planned" },
     { title: "Prioridade para ônibus", body: "Cenários de faixa exclusiva e prioridade semafórica, medidos com o GPS real da frota antes e depois.", status: "Planejado", state: "planned" },
   ],
   en: [
     { title: "Congestion forecasting", body: "Spatio-temporal graph neural networks predict per-segment speed 15 to 60 minutes ahead, trained on TomTom travel times, radar counts and bus GPS.", status: "Collector ready", state: "collecting" },
-    { title: "Crash risk", body: "Tested on 2024: 5% of hexagon-hours hold 23% of crashes. Gradient boosting tied a simple ranking (place rate × hourly profile). Next: add radar volumes and road geometry.", status: "First result", state: "result" },
+    { title: "Crash risk", body: "Tested on 2024: 5% of hexagon-hours hold 23% of crashes; gradient boosting tied a simple ranking (place rate × hourly profile), even with OSM road features. Over time, rain adds 10% and the first rain after 3 dry days another 32%; holidays remove 31%; Série A matches showed no effect.", status: "First result", state: "result" },
     { title: "Adaptive traffic signals", body: "Reinforcement learning controls signals in SUMO simulations of pilot areas and is compared with fixed-time plans.", status: "Planned", state: "planned" },
     { title: "Bus priority", body: "Dedicated-lane and signal-priority scenarios, measured with the fleet's real GPS before and after.", status: "Planned", state: "planned" },
   ],

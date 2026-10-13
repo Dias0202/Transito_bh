@@ -31,6 +31,9 @@ src/bhtraffic/
   viz/figures.py       paper figures (PT/EN)
   export/site.py       aggregated JSON for the site
   models/risk.py       crash-risk model (H3 × weekday × hour), baselines, bootstrap, SHAP
+  models/temporal.py   holiday / match / rain effects on hourly crashes (quasi-Poisson GLM)
+  analysis/congestion.py  radar speed index vs night free-flow
+  ingest/calendar.py, ingest/inmet.py, geo/osm.py   covariates (all free sources)
 data/corridors.toml    18 corridors (BH + RMBH), 4 HERE bboxes
 notebooks/             00 Colab setup · 01 ingest · 02 EDA crashes · 03 vehicle mix · 04 radars (Colab) · 05 collector
 paper/                 Quarto: pt/ and en/, shared figures/
