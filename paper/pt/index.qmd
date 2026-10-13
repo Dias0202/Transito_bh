@@ -1,0 +1,101 @@
+---
+title: "Trânsito em Belo Horizonte: diagnóstico com dados abertos e caminhos com aprendizado de máquina"
+subtitle: "Versão 0.1 — rascunho de trabalho"
+author: "Gabriel Moreira"
+date: 2026-10-13
+lang: pt-BR
+abstract: |
+  Este estudo reúne dados abertos da Prefeitura de Belo Horizonte (BHTrans) para descrever onde, quando
+  e com quem o trânsito da cidade fere, e propõe quatro frentes de aprendizado de máquina — previsão de
+  congestionamento, risco de sinistro, semáforos adaptativos e prioridade para ônibus — a serem validadas
+  com dados reais e simulação. Nesta versão, o diagnóstico cobre 184.350 sinistros com vítima (2011–2024).
+  Resultados de modelos serão incluídos apenas quando existirem.
+---
+
+> **Status:** rascunho. Seções marcadas como *planejado* descrevem método, não resultados.
+> Números gerados por `bhtraffic.export.site` e `bhtraffic.viz.figures` em 2026-10-13.
+
+# Introdução
+
+Belo Horizonte registrou, em 2024, **13.266 sinistros de trânsito com vítima — 36 por dia** —
+e **159 mortes**, o maior número desde 2014. O objetivo deste trabalho é duplo: (i) construir um diagnóstico
+reprodutível do trânsito da cidade e da Região Metropolitana (RMBH), segmentado por área, horário e tipo
+de usuário da via; e (ii) avaliar, com dados reais e simulação, intervenções baseadas em aprendizado de máquina.
+
+# Dados
+
+| Fonte | Período | Uso |
+|---|---|---|
+| Sinistros com vítima — ocorrências, veículos e pessoas [@pbh_sinistros] | 2011–2024 | diagnóstico, risco |
+| Contagem volumétrica de radares [@pbh_radares] | 2021–2023 | volume, velocidade, mix veicular |
+| GPS dos ônibus em tempo real (PBH) | coleta própria | velocidade comercial |
+| TomTom Routing e HERE Traffic Flow | coleta própria | tempo de viagem e velocidade por corredor |
+| OpenStreetMap; grade H3 res. 8 [@h3] | — | malha viária, agregação espacial |
+
+O tratamento dos dados está documentado em `docs/data_audit.md`. Destacam-se: unificação de nomes de colunas
+que mudam entre anos; conversão das coordenadas de 2011–2015 para o padrão UTM dos anos seguintes; e remoção
+do mapa de 6.618 registros com geocódigo padrão (um mesmo ponto atribuído a cinco ou mais regionais).
+
+# Diagnóstico preliminar
+
+## A década
+
+![Sinistros com vítima e mortes por ano, 2011–2024.](../figures/yearly_pt.png){#fig-yearly}
+
+Os sinistros com vítima caíram de 16.288 (2011) para 10.624 (2020) e voltaram a subir, chegando a 13.266 em 2024.
+As mortes seguiram trajetória parecida, com mínimo de 105 em 2019 e 159 em 2024 (@fig-yearly).
+
+## Quando
+
+![Sinistros com vítima por dia da semana e hora, 2020–2024 (n = 61.046). Destaque: pior célula.](../figures/clock_pt.png){#fig-clock}
+
+De segunda a sexta, os sinistros concentram-se em dois picos — **7h e 18h** —, coincidindo com os deslocamentos
+casa–trabalho. A pior hora da semana é **quarta-feira às 18h**, com 786 sinistros em cinco anos (@fig-clock).
+
+## Onde
+
+![Sinistros com vítima por regional, 2020–2024.](../figures/regionals_pt.png){#fig-regionals}
+
+A Centro-Sul lidera em número de sinistros (9.014 em 2020–2024), mas a **Pampulha concentra mais sinistros fatais**
+(107 contra 58 da Centro-Sul). O hexágono mais crítico da Pampulha fica sobre a Av. Antônio Carlos (@fig-regionals).
+
+## Quem
+
+![Mortes por tipo de usuário da via, 2020–2024.](../figures/road_users_pt.png){#fig-users}
+
+**75 % dos sinistros com vítima envolvem ao menos uma motocicleta.** Das 638 mortes em 2020–2024,
+motociclistas (48 %) e pedestres (32 %) somam 80 % (@fig-users).
+
+**Exposição (preliminar).** Na primeira amostra dos radares da BHTrans — 10 dias de agosto de 2021, 88 pontos,
+12,4 milhões de veículos detectados — motos são **12,5 %** do fluxo. A desproporção entre presença no tráfego e
+presença nos sinistros com vítima é o ponto de partida do modelo de risco. Ressalvas: amostra curta, e a classificação
+dos radares pode subcontar motos que trafegam entre faixas.
+
+# Métodos de aprendizado de máquina (planejado)
+
+1. **Previsão de congestionamento.** Redes em grafo espaço-temporais [@li2018dcrnn; @yu2018stgcn; @wu2019graphwavenet]
+   para prever velocidade por trecho 15–60 min à frente, com radares, TomTom e HERE. Linha de base: média histórica
+   por trecho × hora e modelo sazonal ingênuo. Validação *walk-forward*.
+2. **Risco de sinistro.** LightGBM [@ke2017lightgbm] por hexágono H3 × hora, explicado com SHAP [@lundberg2017shap].
+   Treino até 2022, teste 2023–2024, sem vazamento temporal.
+3. **Semáforos adaptativos.** Aprendizado por reforço em microssimulação SUMO [@lopez2018sumo] de áreas piloto,
+   comparado a planos de tempo fixo (atraso médio, filas, paradas).
+4. **Prioridade para ônibus.** Cenários de faixa exclusiva e prioridade semafórica avaliados com GPS real da frota.
+
+# Simulação (planejado)
+
+Duas camadas: microssimulação SUMO em três pilotos (Hipercentro/Contorno; Antônio Carlos × Pampulha; Anel entre
+BR-040 e Cristiano Machado), calibrada com radares e tempos de viagem; e uma camada macro/meso para cenários de
+política em BH, alimentada pela Pesquisa Origem-Destino da RMBH.
+
+# Limitações
+
+- A base cobre apenas sinistros **com vítima**.
+- 14,6 % dos sinistros não têm coordenada válida; ficam fora do mapa, mas contam nos totais.
+- As contagens de radares terminam em set/2023 e têm meses incompletos.
+- Os dados de tempo de viagem dependem da coleta própria, iniciada em 2026.
+
+# Referências {.unnumbered}
+
+::: {#refs}
+:::

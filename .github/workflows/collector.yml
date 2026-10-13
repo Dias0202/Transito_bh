@@ -1,0 +1,69 @@
+name: collector
+
+# Budget: private repos get 2,000 Actions minutes/month and every job is
+# billed rounded UP to a whole minute (skipped runs included), so the
+# schedules below never overlap. ~1,250 runs/month -> fits only if each job
+# stays under 60 s. Minutes avoid :00 because GitHub delays/drops cron jobs
+# at the top of the hour. Times are UTC (BRT = UTC-3).
+on:
+  schedule:
+    - cron: "7,22,37,52 9-12,19-22 * * 1-5"   # weekday peaks: 06-10h and 16-20h BRT, every 15 min
+    - cron: "37 0-8,13-18,23 * * 1-5"         # weekday off-peak: hourly
+    - cron: "37 * * * 0,6"                     # weekends: hourly
+  workflow_dispatch:
+
+concurrency:
+  group: collector
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  RCLONE_VERSION: v1.68.2
+  DRIVE_DEST: gdrive:transito_bh/raw/collector
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /src/
+            /data/corridors.toml
+
+      - name: Restore rclone binary
+        id: rclone-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/rclone
+          key: rclone-${{ env.RCLONE_VERSION }}
+
+      - name: Install rclone
+        if: steps.rclone-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin
+          curl -sSL "https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip" -o /tmp/rclone.zip
+          unzip -q -j /tmp/rclone.zip '*/rclone' -d ~/.local/bin
+
+      # Runner's system python3 (3.12) is enough: the collector is stdlib-only.
+      - name: Collect snapshot
+        env:
+          TOMTOM_API_KEY: ${{ secrets.TOMTOM_API_KEY }}
+          HERE_API_KEY: ${{ secrets.HERE_API_KEY }}
+          PYTHONPATH: src
+        run: python3 -m bhtraffic.collect.run --out out
+
+      # Fails the job loudly (GitHub e-mails on failure) if Drive auth breaks,
+      # e.g. an expired OAuth refresh token. See docs/setup_rclone.md.
+      - name: Upload to Google Drive
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+        run: |
+          test -n "$RCLONE_CONF" || { echo "::error::RCLONE_CONF secret missing"; exit 1; }
+          printf '%s' "$RCLONE_CONF" > /tmp/rclone.conf
+          ~/.local/bin/rclone --config /tmp/rclone.conf copy out "$DRIVE_DEST" --no-traverse --retries 3
+          rm -f /tmp/rclone.conf

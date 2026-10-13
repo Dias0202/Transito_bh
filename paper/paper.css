@@ -1,0 +1,15 @@
+/* Sober academic HTML; shares tokens with the site (site/src/styles/tokens.css). */
+:root { --paper: #f6f3ee; --text: #1a1714; --muted: #5e574e; --rule: #cfc7bb; --amber-text: #8f5400; }
+body {
+  background: var(--paper); color: var(--text);
+  font: 17px/1.6 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  max-width: 46rem; margin: 0 auto; padding: 48px 16px 96px;
+}
+h1, h2, h3 { font-family: "Inter Tight", "Inter", system-ui, sans-serif; letter-spacing: -0.015em; line-height: 1.15; }
+h1.title { font-size: 2.4rem; }
+a { color: var(--amber-text); }
+figure img { max-width: 100%; height: auto; }
+figcaption, .figure-caption { color: var(--muted); font-size: 0.875rem; }
+table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--rule); padding: 4px 10px; text-align: left; }
+#TOC { font-size: 0.9rem; border-left: 1px solid var(--rule); padding-left: 16px; }

@@ -1,0 +1,24 @@
+project:
+  type: default
+  output-dir: _output
+  render:
+    - pt/index.qmd
+    - en/index.qmd
+
+# HTML for the web, Typst for PDF (no LaTeX install needed; Quarto >= 1.4).
+format:
+  html:
+    toc: true
+    number-sections: true
+    theme: none
+    css: paper.css
+    fig-align: left
+    embed-resources: true
+  typst:
+    number-sections: true
+    papersize: a4
+    margin:
+      x: 2.2cm
+      y: 2.4cm
+
+bibliography: references.bib

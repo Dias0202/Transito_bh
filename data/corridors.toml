@@ -1,0 +1,182 @@
+# Corridors sampled by the collector (TomTom Routing, both directions).
+# Anchor points geocoded with OSM Nominatim on 2026-10-13. Points marked
+# `approx = true` were not resolved by Nominatim and were placed manually;
+# validate them on a map (notebooks/01) before trusting route geometry.
+#
+# Budget: 18 corridors x 2 directions = 36 requests/run.
+# ~48 runs/weekday -> ~1,730 req/day, under TomTom free tier (2,500/day).
+
+[points]
+lagoinha = [-19.91302, -43.94256]
+praca_sete = [-19.91910, -43.93859]
+rodoviaria = [-19.91383, -43.94096]
+barro_preto = [-19.92338, -43.95201]
+savassi = [-19.93725, -43.93558]
+praca_bandeira = [-19.94904, -43.92002]
+estacao_sao_gabriel = [-19.86323, -43.92622]
+minas_shopping = [-19.87434, -43.92616]
+estacao_pampulha = [-19.84237, -43.96883]
+estacao_vilarinho = [-19.82245, -43.94611]
+mineirao = [-19.86596, -43.97112]
+gameleira = [-19.93104, -43.98719]
+anel_ivai = [-19.91406, -43.99523]
+olhos_dagua = [-19.99005, -43.96312]
+bh_shopping = [-19.97458, -43.94480]
+tereza_cristina = [-19.95946, -43.99722]
+barreiro = [-19.97698, -44.01855]
+eldorado_contagem = [-19.93870, -44.02942]
+betim_centro = [-19.96913, -44.19690]
+vila_da_serra = [-19.98001, -43.94123]
+neves_centro = [-19.76539, -44.08758]
+vespasiano_centro = [-19.69228, -43.92014]
+sabara_centro = [-19.89129, -43.81034]
+ibirite_centro = [-20.02325, -44.06007]
+santa_luzia_centro = [-19.76970, -43.85140]   # approx
+cidade_administrativa = [-19.78560, -43.95000] # approx
+confins_aeroporto = [-19.62440, -43.97190]     # approx
+
+# Each corridor: origin -> [via...] -> destination ("inbound" = towards the centre).
+# The collector requests both directions.
+
+[[corridor]]
+id = "antonio_carlos"
+name = "Av. Antônio Carlos"
+area = "BH"
+regional = "Pampulha/Noroeste"
+path = ["estacao_pampulha", "mineirao", "lagoinha"]
+
+[[corridor]]
+id = "cristiano_machado"
+name = "Av. Cristiano Machado"
+area = "BH"
+regional = "Nordeste"
+path = ["estacao_sao_gabriel", "minas_shopping", "lagoinha"]
+
+[[corridor]]
+id = "amazonas"
+name = "Av. Amazonas"
+area = "BH/Contagem"
+regional = "Oeste"
+path = ["eldorado_contagem", "gameleira", "praca_sete"]
+
+[[corridor]]
+id = "afonso_pena"
+name = "Av. Afonso Pena"
+area = "BH"
+regional = "Centro-Sul"
+path = ["praca_bandeira", "rodoviaria"]
+
+[[corridor]]
+id = "raja_gabaglia"
+name = "Av. Raja Gabaglia"
+area = "BH"
+regional = "Centro-Sul"
+path = ["bh_shopping", "barro_preto"]
+
+[[corridor]]
+id = "nossa_senhora_do_carmo"
+name = "Av. N. Sra. do Carmo / BR-356"
+area = "BH/Nova Lima"
+regional = "Centro-Sul"
+path = ["vila_da_serra", "savassi"]
+
+[[corridor]]
+id = "anel_sul"
+name = "Anel Rodoviário (Olhos d'Água - Ivaí)"
+area = "BH"
+regional = "Oeste/Noroeste"
+path = ["olhos_dagua", "anel_ivai"]
+
+[[corridor]]
+id = "anel_norte"
+name = "Anel Rodoviário (Ivaí - São Gabriel)"
+area = "BH"
+regional = "Noroeste/Nordeste"
+path = ["anel_ivai", "estacao_sao_gabriel"]
+
+[[corridor]]
+id = "tereza_cristina"
+name = "Av. Tereza Cristina (Barreiro)"
+area = "BH"
+regional = "Barreiro/Oeste"
+path = ["barreiro", "tereza_cristina", "barro_preto"]
+
+[[corridor]]
+id = "vilarinho"
+name = "Av. Vilarinho / Pedro I"
+area = "BH"
+regional = "Venda Nova"
+path = ["estacao_vilarinho", "estacao_pampulha"]
+
+[[corridor]]
+id = "linha_verde"
+name = "Linha Verde (MG-010)"
+area = "BH/RMBH"
+regional = "Norte"
+path = ["confins_aeroporto", "cidade_administrativa", "estacao_sao_gabriel"]
+
+[[corridor]]
+id = "br381_betim"
+name = "BR-381 Fernão Dias (Betim)"
+area = "RMBH"
+regional = "Contagem/Betim"
+path = ["betim_centro", "eldorado_contagem"]
+
+[[corridor]]
+id = "br040_neves"
+name = "BR-040 (Ribeirão das Neves)"
+area = "RMBH"
+regional = "Ribeirão das Neves"
+path = ["neves_centro", "anel_ivai"]
+
+[[corridor]]
+id = "mg020_santa_luzia"
+name = "MG-020 (Santa Luzia)"
+area = "RMBH"
+regional = "Santa Luzia"
+path = ["santa_luzia_centro", "estacao_sao_gabriel"]
+
+[[corridor]]
+id = "sabara"
+name = "Av. dos Andradas / BR-262 (Sabará)"
+area = "RMBH"
+regional = "Sabará"
+path = ["sabara_centro", "rodoviaria"]
+
+[[corridor]]
+id = "ibirite"
+name = "Ibirité - Barreiro"
+area = "RMBH"
+regional = "Ibirité"
+path = ["ibirite_centro", "barreiro"]
+
+[[corridor]]
+id = "vespasiano"
+name = "MG-010 (Vespasiano)"
+area = "RMBH"
+regional = "Vespasiano"
+path = ["vespasiano_centro", "estacao_vilarinho"]
+
+[[corridor]]
+id = "via_expressa"
+name = "Via Expressa / Av. Pedro II"
+area = "BH/Contagem"
+regional = "Noroeste"
+path = ["eldorado_contagem", "anel_ivai", "lagoinha"]
+
+# HERE Traffic Flow bounding boxes: [west, south, east, north]
+[[bbox]]
+id = "centro"
+bbox = [-43.975, -19.955, -43.910, -19.900]
+
+[[bbox]]
+id = "norte"
+bbox = [-44.000, -19.900, -43.900, -19.810]
+
+[[bbox]]
+id = "oeste"
+bbox = [-44.060, -19.990, -43.975, -19.900]
+
+[[bbox]]
+id = "sul"
+bbox = [-43.975, -20.000, -43.910, -19.955]

@@ -1,0 +1,17 @@
+{
+  "sourceUpdated": "2026-10-13T21:00:00Z",
+  "results": [
+    {
+      "location": {
+        "description": "Av. do Contorno",
+        "length": 412.0,
+        "shape": {"links": [{"points": [{"lat": -19.9231, "lng": -43.9521}, {"lat": -19.9245, "lng": -43.9498}], "length": 412.0}]}
+      },
+      "currentFlow": {"speed": 4.2, "speedUncapped": 4.2, "freeFlow": 11.1, "jamFactor": 6.8, "confidence": 0.93, "traversability": "open"}
+    },
+    {
+      "location": {"description": "Av. Amazonas", "length": 230.5, "shape": {"links": []}},
+      "currentFlow": {"speed": 9.7, "freeFlow": 13.9, "jamFactor": 2.1, "confidence": 0.7, "traversability": "open"}
+    }
+  ]
+}

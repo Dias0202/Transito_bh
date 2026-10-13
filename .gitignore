@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+build/
+dist/
+
+# Secrets
+.env
+rclone.conf
+*.json.key
+
+# Data (lives on Google Drive, never in git)
+data/raw/
+data/interim/
+data/processed/
+out/
+
+# Site
+site/node_modules/
+site/dist/
+
+# Quarto
+paper/_output/
+paper/.quarto/
+paper/**/*_files/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

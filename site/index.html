@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trânsito BH</title>
+    <meta name="description" content="Estudo de dados abertos sobre o trânsito de Belo Horizonte: onde, quando e quem — e o que aprendizado de máquina pode fazer." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500;600&display=swap&subset=latin-ext"
+    />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314120f'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23f2a516'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <a class="skip" href="#main" data-i18n="skip"></a>
+
+    <header class="nav" data-nav>
+      <div class="nav__inner wrap">
+        <a class="nav__brand" href="#top" aria-label="Trânsito BH">
+          <span class="nav__dot" aria-hidden="true"></span>Trânsito BH
+        </a>
+        <nav aria-label="Seções" data-i18n-attr="aria-label:nav.label">
+          <ol class="nav__links">
+            <li><a href="#decade" data-i18n="nav.decade"></a></li>
+            <li><a href="#clock" data-i18n="nav.clock"></a></li>
+            <li><a href="#map" data-i18n="nav.map"></a></li>
+            <li><a href="#who" data-i18n="nav.who"></a></li>
+            <li><a href="#buses" data-i18n="nav.buses"></a></li>
+            <li><a href="#ml" data-i18n="nav.ml"></a></li>
+            <li><a href="#method" data-i18n="nav.method"></a></li>
+          </ol>
+        </nav>
+        <button class="lang" type="button" data-lang-toggle>
+          <span class="sr-only" data-i18n="lang.sr"></span><span data-i18n="lang.other" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="nav__progress" aria-hidden="true"><span data-progress></span></div>
+    </header>
+
+    <main id="main">
+      <!-- 1. Hero -->
+      <section class="scene hero" id="top" data-theme="dark" data-scene="hero">
+        <div class="wrap hero__grid">
+          <p class="eyebrow" data-hero-line data-i18n="hero.eyebrow"></p>
+          <h1 class="hero__title">
+            <span class="hero__line" data-hero-line data-i18n="hero.title1"></span>
+            <span class="hero__line hero__line--muted" data-hero-line data-i18n="hero.title2"></span>
+          </h1>
+          <div class="hero__stat" data-hero-line>
+            <span class="hero__num num" data-count="summary.crashes_last_year">—</span>
+            <span class="hero__statlabel" data-i18n="hero.statLabel"></span>
+          </div>
+          <p class="lead hero__lead" data-hero-line data-i18n="hero.lead"></p>
+          <a class="cta" href="#decade" data-hero-line>
+            <span data-i18n="hero.cta"></span>
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v12M2 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- 2. Decade -->
+      <section class="scene decade" id="decade" data-theme="light" data-scene="decade">
+        <div class="wrap split">
+          <header class="split__text">
+            <p class="eyebrow" data-reveal data-i18n="decade.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="decade.title"></h2>
+            <p class="lead" data-reveal data-i18n="decade.lead"></p>
+          </header>
+          <figure class="split__fig decade__fig">
+            <svg class="linechart" data-linechart role="img" aria-labelledby="decade-cap"></svg>
+            <figcaption id="decade-cap" class="caption" data-i18n="decade.caption"></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 3. Traffic clock -->
+      <section class="scene clock" id="clock" data-theme="light" data-scene="clock">
+        <div class="wrap">
+          <header class="scene__head">
+            <p class="eyebrow" data-reveal data-i18n="clock.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="clock.title"></h2>
+          </header>
+        </div>
+        <div class="wrap scrolly">
+          <div class="scrolly__steps">
+            <div class="step" data-step="0"><p data-i18n="clock.step1"></p></div>
+            <div class="step" data-step="1"><p data-i18n="clock.step2"></p></div>
+            <div class="step" data-step="2"><p data-i18n="clock.step3"></p></div>
+          </div>
+          <figure class="scrolly__graphic">
+            <div class="heatmap" data-heatmap></div>
+            <figcaption class="caption" data-i18n="clock.caption"></figcaption>
+            <div class="sr-only"><table data-heatmap-table></table></div>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 4. Map tour -->
+      <section class="scene mapscene" id="map" data-theme="dark" data-scene="map">
+        <div class="wrap">
+          <header class="scene__head">
+            <p class="eyebrow" data-reveal data-i18n="map.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="map.title"></h2>
+          </header>
+        </div>
+        <div class="maptour">
+          <div class="maptour__sticky">
+            <div class="maptour__map" data-map role="img" data-i18n-attr="aria-label:map.aria"></div>
+            <div class="maptour__legend" data-map-legend aria-hidden="true"></div>
+          </div>
+          <div class="maptour__steps" data-map-steps></div>
+        </div>
+      </section>
+
+      <!-- 5. Who -->
+      <section class="scene who" id="who" data-theme="light" data-scene="who">
+        <div class="wrap split">
+          <header class="split__text">
+            <p class="eyebrow" data-reveal data-i18n="who.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="who.title"></h2>
+            <p class="lead" data-reveal data-i18n="who.lead"></p>
+          </header>
+          <figure class="split__fig">
+            <ol class="bars" data-bars></ol>
+            <figcaption class="caption" data-i18n="who.caption"></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 6. Buses -->
+      <section class="scene buses" id="buses" data-theme="dark" data-scene="buses">
+        <div class="wrap split split--reverse">
+          <header class="split__text">
+            <p class="eyebrow" data-reveal data-i18n="buses.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="buses.title"></h2>
+            <p class="lead" data-reveal data-i18n="buses.lead"></p>
+            <p class="caption" data-reveal data-i18n="buses.caption"></p>
+          </header>
+          <figure class="split__fig">
+            <canvas class="buscanvas" data-buscanvas role="img" data-i18n-attr="aria-label:buses.aria"></canvas>
+            <figcaption class="caption stamp num" data-bus-stamp></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 7. ML -->
+      <section class="scene ml" id="ml" data-theme="light" data-scene="ml">
+        <div class="wrap">
+          <header class="scene__head">
+            <p class="eyebrow" data-reveal data-i18n="ml.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="ml.title"></h2>
+            <p class="lead" data-reveal data-i18n="ml.lead"></p>
+          </header>
+          <ol class="fronts" data-fronts></ol>
+        </div>
+      </section>
+
+      <!-- 8. Method -->
+      <section class="scene method" id="method" data-theme="light" data-scene="method">
+        <div class="wrap method__grid">
+          <header>
+            <p class="eyebrow" data-reveal data-i18n="method.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="method.title"></h2>
+          </header>
+          <div class="method__cols">
+            <div>
+              <h3 class="method__h" data-i18n="method.sourcesTitle"></h3>
+              <ul class="method__list" data-list="method.sources"></ul>
+            </div>
+            <div>
+              <h3 class="method__h" data-i18n="method.limitsTitle"></h3>
+              <ul class="method__list" data-list="method.limits"></ul>
+            </div>
+          </div>
+        </div>
+        <footer class="wrap foot">
+          <p class="caption" data-i18n="footer"></p>
+        </footer>
+      </section>
+    </main>
+
+    <noscript><p style="padding:16px">Este site precisa de JavaScript para carregar os dados. / This site needs JavaScript to load its data.</p></noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
