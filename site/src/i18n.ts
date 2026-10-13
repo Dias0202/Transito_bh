@@ -181,6 +181,29 @@ const pt: Dict = {
       ? `Fração dos ${c.num(c.d.risk.crashes)} sinistros georreferenciados de ${c.d.risk.test_year} que cai nos k% de hexágono-horários de maior risco previsto (${c.num(c.d.risk.cells)} hexágonos × 168 horas).`
       : "",
 
+  "nav.whatif": () => "E se",
+  "whatif.eyebrow": () => "E se…",
+  "whatif.title": () => "Simule o que muda com o que já foi medido.",
+  "whatif.lead": (c) =>
+    c.d.whatif
+      ? `Cada cenário usa um efeito estimado com dados de BH e a sinistralidade dos últimos 24 meses. O número grande é o valor central; a faixa mostra 90% das ${c.num(5000)} simulações.`
+      : "",
+  "whatif.bumps.title": () => "Redutores de velocidade",
+  "whatif.bumps.control": () => "Redutores novos:",
+  "whatif.cameras.title": () => "Radares de volta",
+  "whatif.cameras.control": () => "Estimativa do efeito do radar",
+  "whatif.cameras.all": () => "Todo o período",
+  "whatif.cameras.since": () => "Desde 2024",
+  "whatif.rain.title": () => "Primeira chuva",
+  "whatif.rain.control": () => "Fração do excesso evitada:",
+  "whatif.chip.measured": () => "Efeito medido",
+  "whatif.chip.assumption": () => "Fração: premissa",
+  "whatif.unit": () => "sinistros com vítima a menos por ano",
+  "whatif.foot": (c) =>
+    c.d.whatif
+      ? `Redutores: efeito medido −${Math.round((1 - c.d.whatif.bumps.effect) * 100)}% (IC ${Math.round((1 - c.d.whatif.bumps.effect_ci[1]) * 100)}–${Math.round((1 - c.d.whatif.bumps.effect_ci[0]) * 100)}%), aplicado só a ruas locais com sinistralidade dentro da faixa onde foi medido. Linha de base: ${c.d.whatif.window.replace("..", " a ")}. Simulação, não promessa: o resultado real depende de onde e como cada intervenção é feita.`
+      : "",
+
   "ml.eyebrow": () => "Próximos passos",
   "ml.title": () => "O que aprendizado de máquina pode fazer.",
   "ml.lead": () => "Quatro frentes, cada uma validada com dados reais ou simulação antes de virar proposta. Nenhum resultado de modelo aparece aqui até existir.",
@@ -295,6 +318,29 @@ const en: Dict = {
   "risk.caption": (c) =>
     c.d.risk
       ? `Share of ${c.d.risk.test_year}'s ${c.num(c.d.risk.crashes)} geolocated crashes falling in the top-k% hexagon-hours by predicted risk (${c.num(c.d.risk.cells)} hexagons × 168 hours).`
+      : "",
+
+  "nav.whatif": () => "What if",
+  "whatif.eyebrow": () => "What if…",
+  "whatif.title": () => "Simulate what changes, using what was measured.",
+  "whatif.lead": (c) =>
+    c.d.whatif
+      ? `Each scenario uses an effect estimated from BH data and the crash record of the last 24 months. The big number is the central value; the band shows 90% of ${c.num(5000)} simulations.`
+      : "",
+  "whatif.bumps.title": () => "Speed bumps",
+  "whatif.bumps.control": () => "New speed bumps:",
+  "whatif.cameras.title": () => "Cameras back",
+  "whatif.cameras.control": () => "Camera effect estimate",
+  "whatif.cameras.all": () => "Whole period",
+  "whatif.cameras.since": () => "Since 2024",
+  "whatif.rain.title": () => "First rain",
+  "whatif.rain.control": () => "Share of the excess avoided:",
+  "whatif.chip.measured": () => "Measured effect",
+  "whatif.chip.assumption": () => "Share: assumption",
+  "whatif.unit": () => "fewer injury crashes a year",
+  "whatif.foot": (c) =>
+    c.d.whatif
+      ? `Speed bumps: measured effect −${Math.round((1 - c.d.whatif.bumps.effect) * 100)}% (CI ${Math.round((1 - c.d.whatif.bumps.effect_ci[1]) * 100)}–${Math.round((1 - c.d.whatif.bumps.effect_ci[0]) * 100)}%), applied only to local streets with crash rates inside the range where it was measured. Baseline: ${c.d.whatif.window.replace("..", " to ")}. A simulation, not a promise: real results depend on where and how each intervention is built.`
       : "",
 
   "ml.eyebrow": () => "Next steps",

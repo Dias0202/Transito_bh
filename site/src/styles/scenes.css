@@ -257,11 +257,41 @@
   padding-left: var(--s-4); border-left: 2px solid var(--accent-mark);
 }
 
-/* ---------- 8. Buses ---------- */
+/* ---------- 8. What if ---------- */
+.wi__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); border-top: 1px solid var(--hairline); }
+.wi { display: grid; gap: var(--s-3); align-content: start; padding-top: var(--s-6); }
+.wi__title { font-size: var(--fs-h3); }
+.wi__chips { display: flex; flex-wrap: wrap; gap: var(--s-4); margin: 0; }
+.wi__control { display: grid; gap: var(--s-2); font-size: var(--fs-small); color: var(--fg-muted); margin-top: var(--s-2); }
+.wi__control b { color: var(--fg); font-weight: 600; }
+.wi__control input[type="range"] { width: 100%; accent-color: var(--accent-mark); min-height: 32px; }
+.wi__seg { display: inline-flex; grid-auto-flow: column; justify-content: start; gap: 0; border: 1px solid var(--hairline); border-radius: 999px; padding: 2px; width: max-content; max-width: 100%; }
+.wi__seg button {
+  font: 500 var(--fs-small)/1 var(--font-body); color: var(--fg-muted); background: transparent; border: 0;
+  border-radius: 999px; padding: var(--s-2) var(--s-4); min-height: 36px; cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+}
+.wi__seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.wi__seg button:not([aria-pressed="true"]):hover { color: var(--fg); }
+.wi__out { margin: var(--s-4) 0 0; display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap; }
+.wi__value { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.5rem, 2rem + 2vw, 4rem); line-height: 1; letter-spacing: -0.02em; color: var(--accent-mark); }
+.wi.is-uncertain .wi__value { color: var(--fg-muted); }
+.wi__unit { color: var(--fg-muted); font-size: var(--fs-small); max-width: 16ch; }
+.wi__scale { position: relative; height: 18px; margin-top: var(--s-2); background: linear-gradient(var(--hairline), var(--hairline)) 0 50% / 100% 1px no-repeat; overflow-x: clip; }
+.wi__band { position: absolute; left: 0; top: 5px; width: 100%; height: 8px; border-radius: 4px; background: var(--accent-mark); opacity: 0.28; transform-origin: 0 50%; }
+.wi.is-uncertain .wi__band { background: var(--fg-muted); }
+.wi__mark { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.wi__mark::after { content: ""; position: absolute; left: 0; top: 1px; width: 2px; height: 16px; margin-left: -1px; background: var(--fg); }
+.wi__zero { position: absolute; top: -2px; width: 1px; height: 22px; background: var(--fg); opacity: 0.5; }
+.wi__label { color: var(--fg-muted); font-size: var(--fs-small); max-width: 46ch; }
+.wi__foot { margin-top: var(--s-7); max-width: var(--measure); }
+@media (max-width: 900px) { .wi__grid { grid-template-columns: 1fr; gap: 0; } .wi { padding: var(--s-6) 0; border-bottom: 1px solid var(--hairline); } }
+
+/* ---------- 9. Buses ---------- */
 .buscanvas { width: 100%; aspect-ratio: 1 / 1; max-height: 78vh; }
 .stamp { color: var(--fg-muted); }
 
-/* ---------- 9. ML fronts ---------- */
+/* ---------- 10. ML fronts ---------- */
 .fronts {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -292,7 +322,7 @@
   .front, .front:nth-child(even) { padding: var(--s-6) 0; border-right: 0; }
 }
 
-/* ---------- 10. Method ---------- */
+/* ---------- 11. Method ---------- */
 .method__grid { display: grid; gap: var(--s-7); }
 .method__cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-8); }
 .method__h { font-size: var(--fs-body); font-family: var(--font-body); font-weight: 600; margin-bottom: var(--s-3); }

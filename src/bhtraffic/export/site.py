@@ -233,6 +233,27 @@ def risk() -> dict | None:
     }
 
 
+def whatif() -> dict | None:
+    """Pre-computed scenario curves from bhtraffic.sim.whatif (Monte Carlo, 5-95% bands)."""
+    f = processed_dir("sim") / "whatif.json"
+    if not f.exists():
+        return None
+    w = json.loads(f.read_text("utf-8"))
+    r1 = lambda d: {k: round(v, 1) for k, v in d.items()}
+    b, cam, fr = w["bumps"], w["cameras"], w["first_rain"]
+    return {
+        "window": w["baseline_window"],
+        "bumps": {"effect": round(b["effect"]["ratio"], 3), "effect_ci": [round(b["effect"]["ci_low"], 3), round(b["effect"]["ci_high"], 3)],
+                  "candidates": b["candidates_available"],
+                  "curve": [{"n": x["n"], "base": round(x["baseline_per_year"], 1), **r1(x["avoided"])} for x in b["curve"]]},
+        "cameras": {"sites": cam["sites"], "base": round(cam["baseline_per_year"], 1),
+                    "all": r1(cam["variants"]["all_period"]["avoided"]), "since2024": r1(cam["variants"]["since_2024"]["avoided"])},
+        "first_rain": {"hours": round(fr["first_rain_hours_per_year"], 1), "crashes": round(fr["crashes_in_first_rain_hours_per_year"], 1),
+                       "excess": r1(fr["excess_first_rain_per_year"]), "rain_hours": round(fr["rain_hours_per_year"]),
+                       "rain_excess": r1(fr["excess_rain_per_year"])},
+    }
+
+
 def main() -> int:
     o, v, p = _load()
     oc, through = _load_combined()
@@ -244,7 +265,7 @@ def main() -> int:
         _dump("regionals", regionals(oc)),
         _dump("vehicles", vehicles(o, v, p)),
     ]
-    for name, fn in (("effects", effects), ("risk", risk)):
+    for name, fn in (("effects", effects), ("risk", risk), ("whatif", whatif)):
         obj = fn()
         if obj:
             written.append(_dump(name, obj))

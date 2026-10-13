@@ -191,6 +191,40 @@ project grouped within 200 m), because bumps of one project sit on one street an
 severity (not only counts), and a 150 m radius may miss that. Speeds measured by the BHTrans radars (being processed)
 will allow testing the effect on speed directly.
 
+# Safety "what if" scenarios
+
+**Rules.** Each scenario uses an effect **measured** in this study (with CI) or an explicit **assumption**; uncertainty is
+propagated by Monte Carlo (5,000 draws: log-normal effect matched to the 95% CI, Poisson baseline) and reported
+as a 90% interval. Baseline: crashes from 2024-08-01 to 2026-07-31 (consistent geocoding),
+annualised. The site has the interactive version.
+
+**Speed bumps at the highest-crash places.** Only where the effect was measured: ≥ 90% of crashes within 100 m on local
+streets (94% of measured bumps sit on residential or tertiary roads) and a rate ≤ 7.3 crashes/year
+(99th percentile around measured bumps); no existing bump within 100 m; sites ≥ 200 m apart.
+
+| Scenario | Crashes/year within 100 m (today) | Avoided/year, median (90%) |
+|---|---|---|
+| 10 speed bumps | 70 | 14 (9–20) |
+| 50 speed bumps | 318 | 66 (45–86) |
+| 100 speed bumps | 564 | 117 (80–151) |
+| 200 speed bumps | 942 | 196 (134–252) |
+| 500 speed bumps | 1,646 | 343 (235–441) |
+
+: Applied effect: ×0.79 [0.72–0.87] (speed bump, net of placebo). {#tbl-whatif}
+
+**Cameras back at the 42 sites still without one** (removed in Nov 2025): 452 crashes/year
+within 150 m. With the whole-period effect, avoided 3 (-32–38) — the range includes
+zero; with the since-2024 effect, 37 (3–69), still not significant at 95%.
+**There is no basis to promise a result.**
+
+**First rain after 72 dry hours.** ~18 hours/year with ~45
+crashes; the excess attributable to it being the first rain is 7 (4–11) crashes/year, and
+the excess over all rainy hours (~402 h/year) is 81 (66–96). An action
+(alerts, enforcement, road cleaning) removing a share *p* of that excess avoids *p* × that number — *p* is an assumption.
+
+**Reading.** Speed bumps on local streets are the lever with a measured effect; larger gains would require acting on
+arterials, where the effect of bumps was **not** measured and where the infrastructure scenarios (SUMO, F10) come in.
+
 # Machine-learning methods (planned)
 
 1. **Congestion forecasting.** Spatio-temporal graph networks [@li2018dcrnn; @yu2018stgcn; @wu2019graphwavenet]

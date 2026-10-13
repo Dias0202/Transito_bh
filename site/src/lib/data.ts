@@ -76,6 +76,14 @@ export interface Risk {
   tie_ci_top5: [number, number];
 }
 
+export interface WIBand { median: number; lo: number; hi: number }
+export interface WhatIf {
+  window: string;
+  bumps: { effect: number; effect_ci: [number, number]; candidates: number; curve: (WIBand & { n: number; base: number })[] };
+  cameras: { sites: number; base: number; all: WIBand; since2024: WIBand };
+  first_rain: { hours: number; crashes: number; excess: WIBand; rain_hours: number; rain_excess: WIBand };
+}
+
 export interface Data {
   summary: Summary;
   yearly: YearRow[];
@@ -85,6 +93,7 @@ export interface Data {
   bus: BusSnapshot | null;
   effects: Effects | null;
   risk: Risk | null;
+  whatif: WhatIf | null;
 }
 
 const base = `${import.meta.env.BASE_URL}data/`;
@@ -96,7 +105,7 @@ async function get<T>(name: string): Promise<T> {
 }
 
 export async function loadCore(): Promise<Data> {
-  const [summary, yearly, clock, regionals, vehicles, bus, effects, risk] = await Promise.all([
+  const [summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif] = await Promise.all([
     get<Summary>("summary"),
     get<YearRow[]>("yearly"),
     get<Clock>("clock"),
@@ -106,8 +115,9 @@ export async function loadCore(): Promise<Data> {
     // Model outputs are optional: their scenes hide when a file is missing.
     get<Effects>("effects").catch(() => null),
     get<Risk>("risk").catch(() => null),
+    get<WhatIf>("whatif").catch(() => null),
   ]);
-  return { summary, yearly, clock, regionals, vehicles, bus, effects, risk };
+  return { summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif };
 }
 
 // Hexes are the largest file; only fetched when the map scene is near.

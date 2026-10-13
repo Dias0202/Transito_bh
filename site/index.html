@@ -30,6 +30,7 @@
             <li><a href="#who" data-i18n="nav.who"></a></li>
             <li><a href="#rain" data-i18n="nav.rain"></a></li>
             <li><a href="#risk" data-i18n="nav.risk"></a></li>
+            <li><a href="#whatif" data-i18n="nav.whatif"></a></li>
             <li><a href="#buses" data-i18n="nav.buses"></a></li>
             <li><a href="#ml" data-i18n="nav.ml"></a></li>
             <li><a href="#method" data-i18n="nav.method"></a></li>
@@ -173,7 +174,53 @@
         </div>
       </section>
 
-      <!-- 8. Buses -->
+      <!-- 8. What if: safety scenarios from measured effects -->
+      <section class="scene whatif" id="whatif" data-theme="light" data-scene="whatif">
+        <div class="wrap">
+          <header class="scene__head">
+            <p class="eyebrow" data-reveal data-i18n="whatif.eyebrow"></p>
+            <h2 class="display" data-reveal data-i18n="whatif.title"></h2>
+            <p class="lead" data-reveal data-i18n="whatif.lead"></p>
+          </header>
+          <div class="wi__grid">
+            <article class="wi" data-whatif="bumps">
+              <h3 class="wi__title" data-i18n="whatif.bumps.title"></h3>
+              <p class="wi__chips"><span class="chip chip--result" data-i18n="whatif.chip.measured"></span></p>
+              <label class="wi__control"><span><span data-i18n="whatif.bumps.control"></span> <b class="num" data-wi-n="bumps"></b></span>
+                <input type="range" min="0" max="8" step="1" data-bumps-n /></label>
+              <p class="wi__out" aria-live="polite"><span class="wi__value num">0</span> <span class="wi__unit" data-i18n="whatif.unit"></span></p>
+              <div class="wi__scale" aria-hidden="true"><span class="wi__zero"></span><span class="wi__band"></span><span class="wi__mark"></span></div>
+              <p class="wi__range caption num"></p>
+              <p class="wi__label" data-wi-label></p>
+            </article>
+            <article class="wi" data-whatif="cameras">
+              <h3 class="wi__title" data-i18n="whatif.cameras.title"></h3>
+              <p class="wi__chips"><span class="chip chip--result" data-i18n="whatif.chip.measured"></span></p>
+              <div class="wi__control wi__seg" role="group" data-i18n-attr="aria-label:whatif.cameras.control">
+                <button type="button" data-cam="all" aria-pressed="true" data-i18n="whatif.cameras.all"></button>
+                <button type="button" data-cam="since2024" aria-pressed="false" data-i18n="whatif.cameras.since"></button>
+              </div><span hidden data-wi-n="cameras"></span>
+              <p class="wi__out" aria-live="polite"><span class="wi__value num">0</span> <span class="wi__unit" data-i18n="whatif.unit"></span></p>
+              <div class="wi__scale" aria-hidden="true"><span class="wi__zero"></span><span class="wi__band"></span><span class="wi__mark"></span></div>
+              <p class="wi__range caption num"></p>
+              <p class="wi__label" data-wi-label></p>
+            </article>
+            <article class="wi" data-whatif="rain">
+              <h3 class="wi__title" data-i18n="whatif.rain.title"></h3>
+              <p class="wi__chips"><span class="chip chip--result" data-i18n="whatif.chip.measured"></span><span class="chip" data-i18n="whatif.chip.assumption"></span></p>
+              <label class="wi__control"><span><span data-i18n="whatif.rain.control"></span> <b class="num" data-wi-n="rain"></b></span>
+                <input type="range" min="0" max="100" step="10" data-rain-share /></label>
+              <p class="wi__out" aria-live="polite"><span class="wi__value num">0</span> <span class="wi__unit" data-i18n="whatif.unit"></span></p>
+              <div class="wi__scale" aria-hidden="true"><span class="wi__zero"></span><span class="wi__band"></span><span class="wi__mark"></span></div>
+              <p class="wi__range caption num"></p>
+              <p class="wi__label" data-wi-label></p>
+            </article>
+          </div>
+          <p class="caption wi__foot" data-i18n="whatif.foot"></p>
+        </div>
+      </section>
+
+      <!-- 9. Buses -->
       <section class="scene buses" id="buses" data-theme="dark" data-scene="buses">
         <div class="wrap split split--reverse">
           <header class="split__text">
@@ -189,7 +236,7 @@
         </div>
       </section>
 
-      <!-- 9. ML -->
+      <!-- 10. ML -->
       <section class="scene ml" id="ml" data-theme="light" data-scene="ml">
         <div class="wrap">
           <header class="scene__head">
@@ -201,7 +248,7 @@
         </div>
       </section>
 
-      <!-- 10. Method -->
+      <!-- 11. Method -->
       <section class="scene method" id="method" data-theme="light" data-scene="method">
         <div class="wrap method__grid">
           <header>

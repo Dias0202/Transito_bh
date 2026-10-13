@@ -15,7 +15,7 @@ Projeto hobby contínuo: cada fase entrega algo publicável (figura, seção do 
 | F2e | Dados até jul/2026: sinistros mensais (2016→), histórico de fiscalização eletrônica (51 retratos, jun/2022→), redutores com data de implantação — `ingest/recentes.py` | — | ✅ |
 | F3c | Efeito de radares e redutores (`models/enforcement.py`): FE Poisson ponto × mês, estudo de evento da retirada de nov/2025, antes/depois de redutores com placebo | F2e | ✅ radar sem efeito detectável (×0,99 [0,90–1,09]); retirada nov/2025 ×1,00 [0,80–1,24] (pré-tendência rejeitada: frágil); redutor ×0,79 [0,72–0,86] líquido do placebo |
 | F9 | **Simulador "e se" de segurança** (`sim/whatif.py`): cenários com efeitos medidos + premissas externas explícitas, incerteza por Monte Carlo sobre os ICs. Cenários: redutores nos N pontos de maior risco; radares de volta; velocidade máxima 60→50 nas arteriais (Nilsson, velocidades reais dos radares); resposta à primeira chuva | F3, F3b, F3c, F2 | ⏳ |
-| F9b | **Simulador interativo no site**: controles (nº de redutores, regionais, % de redução de velocidade) recalculando a partir de agregados por célula; sempre com faixa de incerteza e rótulo medido/premissa | F9 | ⏳ |
+| F9b | **Simulador interativo no site**: controles (nº de redutores, regionais, % de redução de velocidade) recalculando a partir de agregados por célula; sempre com faixa de incerteza e rótulo medido/premissa | F9 | ✅ cena "E se" no site (3 cenários) |
 | F4 | Previsão de velocidade 15–60 min (Graph WaveNet / STGCN) — GPU Colab | F2, F2b | ⏳ |
 | F5 | SUMO: pilotos Hipercentro/Contorno, Antônio Carlos × Pampulha, Anel BR-040 ↔ Cristiano Machado; calibração com radares + TomTom | F2 | ⏳ |
 | F6 | RL semafórico (sumo-rl, PPO/MAPPO) vs tempo fixo | F5 | ⏳ |
