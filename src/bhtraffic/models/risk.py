@@ -108,6 +108,24 @@ FEATURES = [
 ]
 
 
+# v1: road features from OpenStreetMap (bhtraffic.geo.osm), fixed before looking at
+# 2024 results. Speed cameras are excluded on purpose: they are placed *because*
+# of crash history, so they would leak the outcome.
+OSM_FEATURES = [
+    "km_total", "km_motorway", "km_trunk", "km_primary", "km_secondary", "km_tertiary",
+    "intersections", "n_traffic_signals", "n_crossing", "n_bus_stop", "n_roundabout",
+    "lanes_mean", "maxspeed_max", "oneway_share",
+]
+
+
+def add_osm(panel: pd.DataFrame) -> pd.DataFrame:
+    osm = pd.read_parquet(processed_dir("osm") / "h3_features.parquet")[["h3", *OSM_FEATURES]]
+    out = panel.merge(osm, on="h3", how="left")
+    fill0 = [c for c in OSM_FEATURES if c.startswith(("km_", "n_")) or c == "intersections"]
+    out[fill0] = out[fill0].fillna(0)
+    return out
+
+
 def capture(y: np.ndarray, score: np.ndarray, k: float) -> float:
     """Share of crashes inside the top-k fraction of slots ranked by score (ties broken randomly)."""
     rng = np.random.default_rng(0)
@@ -129,30 +147,42 @@ class Result:
     train: pd.DataFrame
     test: pd.DataFrame
     metrics: dict
+    features: list
 
 
-def fit_eval(crashes: pd.DataFrame | None = None, test_year: int = TEST_YEAR) -> Result:
+def _lgbm():
     import lightgbm as lgb
 
+    return lgb.LGBMRegressor(
+        objective="poisson", n_estimators=600, learning_rate=0.03, num_leaves=31,
+        min_child_samples=50, subsample=0.8, subsample_freq=1, colsample_bytree=0.8,
+        reg_lambda=1.0, random_state=0, verbose=-1,
+    )
+
+
+def fit_eval(crashes: pd.DataFrame | None = None, test_year: int = TEST_YEAR, osm: bool = True) -> Result:
     crashes = load_crashes() if crashes is None else crashes
     cells = sorted(crashes["h3"].unique())
     train = build_panel(crashes, test_year - 1, cells)
     test = build_panel(crashes, test_year, cells)
     test["regional"] = pd.Categorical(test["regional"], categories=train["regional"].cat.categories)
 
-    model = lgb.LGBMRegressor(
-        objective="poisson", n_estimators=600, learning_rate=0.03, num_leaves=31,
-        min_child_samples=50, subsample=0.8, subsample_freq=1, colsample_bytree=0.8,
-        reg_lambda=1.0, random_state=0, verbose=-1,
-    )
-    model.fit(train[FEATURES], train["y"], categorical_feature=CATEGORICAL)
-    test["pred_model"] = model.predict(test[FEATURES])
+    # v0: history-only features. Kept as a fixed reference for every later version.
+    v0 = _lgbm().fit(train[FEATURES], train["y"], categorical_feature=CATEGORICAL)
+    test["pred_v0"] = v0.predict(test[FEATURES])
+    model, feats = v0, FEATURES
+    if osm:
+        train, test = add_osm(train), add_osm(test)
+        feats = FEATURES + OSM_FEATURES
+        model = _lgbm().fit(train[feats], train["y"], categorical_feature=CATEGORICAL)
+    test["pred_model"] = model.predict(test[feats])
     test["pred_baseline"] = test["slot_mean3"]
     test["pred_cellxprofile"] = test["cell_total"] * test["city_slot_share"]
 
     y = test["y"].to_numpy()
-    metrics: dict = {"test_year": test_year, "cells": len(cells), "slots": len(test), "crashes_test": int(y.sum())}
-    for name in ("model", "baseline", "cellxprofile"):
+    metrics: dict = {"test_year": test_year, "cells": len(cells), "slots": len(test), "crashes_test": int(y.sum()),
+                     "model_version": "v1_osm" if osm else "v0", "features": feats}
+    for name in ("model", "v0", "baseline", "cellxprofile"):
         mu = test[f"pred_{name}"].to_numpy()
         m = {
             "poisson_deviance": poisson_deviance(y, mu),
@@ -162,7 +192,7 @@ def fit_eval(crashes: pd.DataFrame | None = None, test_year: int = TEST_YEAR) ->
         for k in TOP_K:
             m[f"capture_top{int(k * 100)}pct"] = capture(y, mu, k)
         metrics[name] = m
-    return Result(model, train, test, metrics)
+    return Result(model, train, test, metrics, feats)
 
 
 def bootstrap_diff(test: pd.DataFrame, a: str, b: str, reps: int = 500, k: float = 0.05) -> dict:
@@ -188,8 +218,8 @@ def explain(res: Result, n: int = 5000):
     import shap
 
     sample = res.test.sample(min(n, len(res.test)), random_state=0)
-    sv = shap.TreeExplainer(res.model).shap_values(sample[FEATURES])
-    imp = pd.Series(np.abs(sv).mean(axis=0), index=FEATURES).sort_values(ascending=False)
+    sv = shap.TreeExplainer(res.model).shap_values(sample[res.features])
+    imp = pd.Series(np.abs(sv).mean(axis=0), index=res.features).sort_values(ascending=False)
     return imp, sv, sample
 
 
@@ -200,8 +230,9 @@ def main() -> None:
     imp, _, _ = explain(res)
     res.metrics["shap_mean_abs"] = imp.round(5).to_dict()
     res.metrics["model_minus_cellxprofile"] = bootstrap_diff(res.test, "model", "cellxprofile")
+    res.metrics["model_minus_v0"] = bootstrap_diff(res.test, "model", "v0")
     (out / "metrics.json").write_text(json.dumps(res.metrics, indent=2, ensure_ascii=False), "utf-8")
-    cols = ["h3", "weekday", "hour", "regional", "lat", "lon", "y", "pred_model", "pred_baseline", "pred_cellxprofile"]
+    cols = ["h3", "weekday", "hour", "regional", "lat", "lon", "y", "pred_model", "pred_v0", "pred_baseline", "pred_cellxprofile"]
     res.test[cols].to_parquet(out / f"predictions_{res.metrics['test_year']}.parquet", index=False)
     print(json.dumps(res.metrics, indent=2, ensure_ascii=False))
 

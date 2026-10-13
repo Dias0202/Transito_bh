@@ -1,0 +1,20 @@
+# BH stadiums hosting Série A matches. Coordinates: OpenStreetMap/Nominatim, 2026-10-13.
+# `aliases` are the arena strings used in the Brasileirão dataset (matched after strip/casefold).
+
+[mineirao]
+name = "Mineirão (Estádio Governador Magalhães Pinto)"
+lat = -19.865962
+lon = -43.971124
+aliases = ["Mineirão"]
+
+[independencia]
+name = "Independência (Estádio Raimundo Sampaio)"
+lat = -19.908353
+lon = -43.917778
+aliases = ["Independência", "Estádio Independência", "Independência (*PF)", "Independência*(PF)"]
+
+[arena_mrv]
+name = "Arena MRV"
+lat = -19.930012
+lon = -44.013881
+aliases = ["Arena MRV"]
