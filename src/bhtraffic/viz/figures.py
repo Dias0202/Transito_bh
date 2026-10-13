@@ -30,6 +30,11 @@ L = {
         "road_users": {"motorcycle": "Motociclistas", "pedestrian": "Pedestres", "car": "Automóveis", "bicycle": "Ciclistas", "truck": "Caminhões", "bus": "Ônibus"},
         "deaths_by_user": "Mortes por tipo de usuário",
         "regional": "Sinistros com vítima por regional",
+        "capture_title": "Concentração do risco, {y}: % dos sinistros nos k% célula-horários de maior risco previsto",
+        "capture_x": "Célula-horários priorizados (% do total)",
+        "series": {"model": "LightGBM (Poisson)", "cellxprofile": "Taxa da célula × perfil horário", "baseline": "Média 3 anos do mesmo célula-horário", "random": "Aleatório"},
+        "shap_title": "O que o modelo usa: |SHAP| médio por variável",
+        "features": {"cell_total": "Sinistros/ano na célula", "city_slot_share": "Perfil horário da cidade", "cell_last": "Sinistros na célula, ano anterior", "hour": "Hora", "cell_hour_share": "Perfil horário da célula", "cell_moto_share": "% com moto na célula", "lon": "Longitude", "slot_mean5": "Média 5 anos do célula-horário", "weekday": "Dia da semana", "regional": "Regional", "cell_speed_limit": "Velocidade máxima (mediana)", "cell_weekday_share": "Perfil semanal da célula", "slot_mean3": "Média 3 anos do célula-horário", "ring1_total": "Sinistros nas 6 células vizinhas", "lat": "Latitude", "cell_fatal_share": "% fatais na célula", "slot_last": "Célula-horário, ano anterior"},
     },
     "en": {
         "crashes": "Injury crashes",
@@ -39,6 +44,11 @@ L = {
         "road_users": {"motorcycle": "Motorcyclists", "pedestrian": "Pedestrians", "car": "Car occupants", "bicycle": "Cyclists", "truck": "Truck occupants", "bus": "Bus occupants"},
         "deaths_by_user": "Deaths by road user",
         "regional": "Injury crashes by district",
+        "capture_title": "Risk concentration, {y}: % of crashes in the top-k% cell-hours by predicted risk",
+        "capture_x": "Cell-hours prioritised (% of all)",
+        "series": {"model": "LightGBM (Poisson)", "cellxprofile": "Cell rate × hourly profile", "baseline": "3-year mean of same cell-hour", "random": "Random"},
+        "shap_title": "What the model uses: mean |SHAP| per feature",
+        "features": {"cell_total": "Crashes/year in cell", "city_slot_share": "Citywide hourly profile", "cell_last": "Crashes in cell, previous year", "hour": "Hour", "cell_hour_share": "Cell hourly profile", "cell_moto_share": "% involving motorcycle in cell", "lon": "Longitude", "slot_mean5": "5-year mean of cell-hour", "weekday": "Weekday", "regional": "District", "cell_speed_limit": "Speed limit (median)", "cell_weekday_share": "Cell weekly profile", "slot_mean3": "3-year mean of cell-hour", "ring1_total": "Crashes in 6 neighbour cells", "lat": "Latitude", "cell_fatal_share": "% fatal in cell", "slot_last": "Cell-hour, previous year"},
     },
 }
 
@@ -113,6 +123,35 @@ def regionals(o: pd.DataFrame, years: tuple[int, int], lang: str = "pt") -> Path
     ax.barh(s.index, s.values, color=["#A79F94"] * (len(s) - 1) + [AMBER])
     ax.set_title(f"{L[lang]['regional']}, {years[0]}–{years[1]}", loc="left", fontsize=10, color=TEXT)
     return _save(fig, "regionals", lang)
+
+
+def risk_capture(pred: pd.DataFrame, year: int, lang: str = "pt") -> Path:
+    """Cumulative share of crashes captured when prioritising cell-hours by each predictor."""
+    y = pred["y"].to_numpy()
+    ks = np.linspace(0, 0.30, 61)
+    fig, ax = plt.subplots(figsize=(7, 3.6))
+    _style(ax)
+    styles = {"model": (AMBER, "-", 2.2), "cellxprofile": (TEXT, "--", 1.4), "baseline": ("#A79F94", "-", 1.4)}
+    rng = np.random.default_rng(0)
+    for name, (color, ls, lw) in styles.items():
+        order = np.lexsort((rng.random(len(y)), -pred[f"pred_{name}"].to_numpy()))
+        cum = np.concatenate([[0], np.cumsum(y[order])]) / y.sum()
+        ax.plot(ks * 100, cum[(ks * len(y)).astype(int)] * 100, color=color, ls=ls, lw=lw, label=L[lang]["series"][name])
+    ax.plot([0, 30], [0, 30], color=RULE, lw=1, label=L[lang]["series"]["random"])
+    ax.set_xlabel(L[lang]["capture_x"], color=MUTED, fontsize=9)
+    ax.set_ylabel("%", color=MUTED, fontsize=9)
+    ax.legend(frameon=False, fontsize=8, loc="lower right")
+    ax.set_title(L[lang]["capture_title"].format(y=year), loc="left", fontsize=10, color=TEXT)
+    return _save(fig, "risk_capture", lang)
+
+
+def risk_shap(shap_mean_abs: dict, lang: str = "pt", top: int = 10) -> Path:
+    s = pd.Series(shap_mean_abs).sort_values().tail(top)
+    fig, ax = plt.subplots(figsize=(6, 3.4))
+    _style(ax)
+    ax.barh([L[lang]["features"].get(k, k) for k in s.index], s.values, color=["#A79F94"] * (len(s) - 2) + [AMBER] * 2)
+    ax.set_title(L[lang]["shap_title"], loc="left", fontsize=10, color=TEXT)
+    return _save(fig, "risk_shap", lang)
 
 
 def all_figures(o: pd.DataFrame, p: pd.DataFrame, recent: tuple[int, int]) -> list[Path]:
