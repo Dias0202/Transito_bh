@@ -13,7 +13,7 @@
 | Contagem volumétrica de radares (BHTrans) | `http://servicosbhtrans.pbh.gov.br/Bhtrans/webservice/` (ZIP mensal) | mar/2021–set/2023 (com buracos) | evento por veículo | 0,2–2,9 GB por mês, ~45 GB total. Campos: equipamento, data/hora, faixa, velocidade aferida e da via, classe (auto/moto/caminhão-ônibus), tamanho, lat/lon, endereço, sentido. Servidor **não aceita Range** (download inteiro) |
 | Ponto/estação de ônibus | CKAN `ponto-de-onibus`, `estacao-de-onibus` | mensal até 2026-09 | ponto | infraestrutura |
 | GTFS-RT | CKAN `gtfs-rt` | metadado de 2024-01 | — | verificar se ainda responde |
-| TomTom Routing / HERE Flow | APIs com chave | a partir da ativação do coletor | snapshot 15–60 min | ver `setup_api_keys.md` |
+| TomTom Routing (HERE bloqueado: custo zero) | API com chave | a partir de 2026-10-13 | pico dia útil, 30 min | ver `setup_api_keys.md` |
 
 ## Armadilhas encontradas (tratadas no código)
 

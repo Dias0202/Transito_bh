@@ -224,13 +224,13 @@ export interface Front { title: string; body: string; status: string; state: "co
 
 export const FRONTS: Record<Lang, Front[]> = {
   pt: [
-    { title: "Previsão de congestionamento", body: "Redes neurais em grafo espaço-temporais preveem a velocidade por trecho de 15 a 60 minutos à frente, treinadas com tempos de viagem TomTom e velocidades HERE.", status: "Coletor pronto", state: "collecting" },
+    { title: "Previsão de congestionamento", body: "Redes neurais em grafo espaço-temporais preveem a velocidade por trecho de 15 a 60 minutos à frente, treinadas com tempos de viagem TomTom, radares e GPS dos ônibus.", status: "Coletor pronto", state: "collecting" },
     { title: "Risco de sinistro", body: "Um modelo de gradient boosting por hexágono e hora, explicado com SHAP, aponta onde e quando fiscalização e engenharia rendem mais.", status: "Próximo", state: "next" },
     { title: "Semáforos adaptativos", body: "Aprendizado por reforço controla semáforos em simulações SUMO de áreas piloto e é comparado a planos de tempo fixo.", status: "Planejado", state: "planned" },
     { title: "Prioridade para ônibus", body: "Cenários de faixa exclusiva e prioridade semafórica, medidos com o GPS real da frota antes e depois.", status: "Planejado", state: "planned" },
   ],
   en: [
-    { title: "Congestion forecasting", body: "Spatio-temporal graph neural networks predict per-segment speed 15 to 60 minutes ahead, trained on TomTom travel times and HERE speeds.", status: "Collector ready", state: "collecting" },
+    { title: "Congestion forecasting", body: "Spatio-temporal graph neural networks predict per-segment speed 15 to 60 minutes ahead, trained on TomTom travel times, radar counts and bus GPS.", status: "Collector ready", state: "collecting" },
     { title: "Crash risk", body: "A gradient-boosting model per hexagon and hour, explained with SHAP, shows where and when enforcement and engineering pay off most.", status: "Next", state: "next" },
     { title: "Adaptive traffic signals", body: "Reinforcement learning controls signals in SUMO simulations of pilot areas and is compared with fixed-time plans.", status: "Planned", state: "planned" },
     { title: "Bus priority", body: "Dedicated-lane and signal-priority scenarios, measured with the fleet's real GPS before and after.", status: "Planned", state: "planned" },

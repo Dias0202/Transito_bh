@@ -21,7 +21,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from bhtraffic.collect import bus, here, tomtom
+from bhtraffic.collect import budget, bus, here, tomtom
 from bhtraffic.config import REPO_ROOT
 from bhtraffic.geo import corridors as corridors_mod
 
@@ -63,10 +63,17 @@ def main(argv: list[str] | None = None) -> int:
         corridors, bboxes = corridors_mod.load()
         results: dict[str, tuple[list[dict], list[str]]] = {}
         tt_key, here_key = os.environ.get("TOMTOM_API_KEY"), os.environ.get("HERE_API_KEY")
+        schedule = os.environ.get("BHTRAFFIC_SCHEDULE")
         if "tomtom" in wanted:
-            results["tomtom"] = tomtom.collect(corridors, tt_key, ts) if tt_key else ([], ["tomtom: TOMTOM_API_KEY not set, skipped"])
+            if not budget.tomtom_due(schedule):
+                results["tomtom"] = ([], [f"tomtom: not on budget schedule ({schedule}), skipped"])
+            else:
+                results["tomtom"] = tomtom.collect(corridors, tt_key, ts) if tt_key else ([], ["tomtom: TOMTOM_API_KEY not set, skipped"])
         if "here" in wanted:
-            results["here"] = here.collect(bboxes, here_key, ts) if here_key else ([], ["here: HERE_API_KEY not set, skipped"])
+            if "here" in budget.BLOCKED:
+                results["here"] = ([], [f"here: blocked, {budget.BLOCKED['here']}"])
+            else:
+                results["here"] = here.collect(bboxes, here_key, ts) if here_key else ([], ["here: HERE_API_KEY not set, skipped"])
         if "bus" in wanted:
             results["bus"] = bus.collect(ts)
 

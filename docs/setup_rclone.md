@@ -62,7 +62,7 @@ Depois que um *Run workflow* manual gravar no Drive e durar ≤ 60 s:
 `COLLECTOR_ENABLED` = `true`. Para pausar, mude para `false`.
 
 > Ordem recomendada: **rclone primeiro**. O GPS dos ônibus não precisa de chave e a PBH não guarda histórico —
-> cada dia sem Drive configurado é dado perdido. Chaves TomTom/HERE podem vir depois (o coletor pula o que não tiver chave).
+> cada dia sem Drive configurado é dado perdido. A chave TomTom pode vir depois (o coletor pula o que não tiver chave).
 
 ## Manutenção
 

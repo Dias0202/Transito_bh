@@ -22,7 +22,7 @@ Deliverables: bilingual paper (Quarto), a scrollytelling site and a reproducible
 ```
 src/bhtraffic/
   config.py            paths (local vs Colab/Drive), CRS, constants
-  collect/             stdlib-only collector: TomTom Routing, HERE Flow, PBH bus GPS
+  collect/             stdlib-only collector: TomTom Routing, PBH bus GPS (HERE blocked: zero-cost)
   ingest/pbh.py        CKAN download (dados.pbh.gov.br, behind a WAF)
   ingest/sinistros.py  crash tables: column aliases, coordinate fix, placeholder geocodes, H3
   ingest/radares.py    BHTrans radar counts: monthly ZIP -> 15-min aggregates
@@ -67,9 +67,20 @@ Colab (GPU): open `notebooks/00_colab_setup.ipynb` from GitHub, add the `GH_TOKE
 
 ## Coletor · Collector
 
-GitHub Actions cron, BRT weekday peaks (06–10h, 16–20h) every 15 min, hourly otherwise; job is stdlib-only so it
-fits the 2,000 free minutes. Needs secrets `TOMTOM_API_KEY`, `HERE_API_KEY`, `RCLONE_CONF` —
+GitHub Actions cron: bus GPS every 15 min at BRT weekday peaks (06–10h, 16–20h) and hourly otherwise;
+TomTom Routing every 30 min at weekday peaks only. Job is stdlib-only so it fits the 2,000 free minutes.
+Needs secrets `TOMTOM_API_KEY`, `RCLONE_CONF` —
 see [docs/setup_api_keys.md](docs/setup_api_keys.md) and [docs/setup_rclone.md](docs/setup_rclone.md).
+
+### Custo zero (mandatório) · Zero cost (mandatory)
+
+Este projeto **não pode gerar nenhuma cobrança**. Todo serviço fica abaixo de 75% da cota grátis,
+provedores que exigem cartão sem teto de gastos ficam bloqueados (HERE), e `tests/test_budget.py`
+falha se a agenda do coletor estourar alguma cota no pior mês. Regras completas: [CLAUDE.md](CLAUDE.md).
+
+This project **must never incur a charge**: every service stays under 75% of its free tier, providers that
+need a card without a hard spending cap are blocked (HERE), and `tests/test_budget.py` fails if the
+collector schedule would exceed any free tier in the worst-case month.
 
 ## Dados · Data
 

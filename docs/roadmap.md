@@ -5,7 +5,7 @@ Projeto hobby contínuo: cada fase entrega algo publicável (figura, seção do 
 | Fase | Entrega | Depende de | Status |
 |---|---|---|---|
 | F1 | Fundação: pacote, coletor, ingestão PBH, EDA de sinistros, site scrollytelling, esqueleto do paper | — | ✅ |
-| F1.5 | Chaves TomTom/HERE + rclone; coletor rodando no cron | ações do usuário | ✅ desde 2026-10-13 (run manual: 36 rotas TomTom, 4.442 segmentos HERE, 2.168 ônibus; job 48 s) |
+| F1.5 | Chaves TomTom/HERE + rclone; coletor rodando no cron | ações do usuário | ✅ desde 2026-10-13 (run manual: 36 rotas TomTom, 4.442 segmentos HERE, 2.168 ônibus; job 48 s). HERE bloqueado por custo zero; TomTom só pico 30 min |
 | F2 | Radares BHTrans (contagens por veículo, mar/2021–set/2023): volume, velocidade, mix veicular por corredor × hora — no Colab | Drive (só agregados; ZIP apagado após processar) | 🟡 módulo pronto, ago/2021 processado |
 | F2b | Diagnóstico de congestionamento com 4+ semanas do coletor (índice de atraso por corredor × hora, RMBH) | F1.5 | ⏳ |
 | F2c | Ônibus: velocidade comercial e *bunching* por linha com séries do GPS coletado + GTFS | F1.5 | ⏳ |

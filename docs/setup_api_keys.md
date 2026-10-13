@@ -1,21 +1,25 @@
-# Chaves de API — TomTom e HERE
+# Chaves de API — TomTom (HERE bloqueado)
 
-O coletor (`.github/workflows/collector.yml`) lê duas chaves dos *secrets* do repositório.
-Sem elas ele roda mesmo assim, coletando só as posições dos ônibus (que não exigem chave).
+> **Custo zero é mandatório** ([CLAUDE.md](../CLAUDE.md)). Nada aqui pode gerar cobrança.
+
+O coletor (`.github/workflows/collector.yml`) lê a chave TomTom dos *secrets* do repositório.
+Sem ela ele roda mesmo assim, coletando só as posições dos ônibus (que não exigem chave).
 
 ## TomTom (Routing API)
 
 1. Crie conta em <https://developer.tomtom.com/> (não pede cartão no plano gratuito).
 2. Em **Dashboard → Keys**, use a chave padrão ou crie uma nova com o produto **Routing API** habilitado.
-3. Limite gratuito (confirme na página de preços, muda com o tempo): ~2.500 requisições/dia.
-   O coletor usa 18 corredores × 2 sentidos = **36 req/execução**, ~48 execuções por dia útil ≈ **1.730 req/dia**.
+3. Limite gratuito (docs.tomtom.com/pricing, lido em 2026-10-13): **Routing API 20 mil req/mês**, sem cartão.
+   Sem cartão/crédito pré-pago a TomTom não tem como cobrar. **Nunca cadastre cartão nem compre crédito.**
+   O coletor usa 18 corredores × 2 sentidos = **36 req/execução**, só no cron `7,37 9-12,19-22 * * 1-5`
+   (pico de dia útil, a cada 30 min) → pior mês 23 × 16 × 36 = **13.248 req** (66% da cota). `tests/test_budget.py` garante.
 
-## HERE (Traffic API v7)
+## HERE — BLOQUEADO
 
-1. Crie conta em <https://platform.here.com/> → **Access Manager → Apps → Register new app**.
-2. Gere uma **API Key** para o app.
-3. Verifique na hora do cadastro se o plano gratuito exige cartão de crédito e qual é a cota mensal.
-   O coletor faz **4 req/execução** (uma por *bounding box*), ~1.250 execuções/mês.
+A conta HERE exige cartão de crédito e não oferece teto rígido de gastos: qualquer excesso vira cobrança.
+Por isso o HERE está **bloqueado no código** (`bhtraffic.collect.budget.BLOCKED`) e o workflow não recebe
+a chave. Recomendado: apagar o secret `HERE_API_KEY`, apagar a API key no HERE e remover o cartão / encerrar
+a conta HERE. Os dados de trânsito vêm do TomTom (tempo de viagem por corredor) e do GPS dos ônibus.
 
 ## Cadastrar no GitHub
 
@@ -24,7 +28,6 @@ Repositório → **Settings → Secrets and variables → Actions → New reposi
 | Nome | Valor |
 |---|---|
 | `TOMTOM_API_KEY` | chave TomTom |
-| `HERE_API_KEY` | chave HERE |
 | `RCLONE_CONF` | conteúdo do `rclone.conf` (ver [setup_rclone.md](setup_rclone.md)) |
 
 Localmente, defina as variáveis no shell antes de rodar (o código lê só variáveis de ambiente;
