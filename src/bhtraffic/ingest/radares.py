@@ -117,15 +117,36 @@ def aggregate_zip(path: Path, limit_files: int | None = None) -> tuple[pd.DataFr
     return agg, dim
 
 
+def month_stem(name: str) -> str:
+    return Path(name.replace("%20", "")).stem
+
+
+def outputs(stem: str) -> tuple[Path, Path]:
+    d = processed_dir("radares")
+    return d / f"{stem}.parquet", d / f"{stem}_radars.parquet"
+
+
+def is_done(name: str) -> bool:
+    """A month counts as done only when both outputs were fully written."""
+    return all(p.exists() for p in outputs(month_stem(name)))
+
+
+def _write_atomic(df: pd.DataFrame, dest: Path) -> None:
+    # Write to a temp name and rename last, so a Colab disconnect mid-write
+    # never leaves a truncated file that a resume would treat as finished.
+    tmp = dest.with_name(dest.name + ".tmp")
+    df.to_parquet(tmp, index=False)
+    tmp.replace(dest)
+
+
 def build_month(name: str, work_dir: Path, keep_zip: bool = False) -> Path:
     """Download one month, aggregate to processed/radares/<MES_ANO>.parquet, delete the ZIP."""
     work_dir.mkdir(parents=True, exist_ok=True)
     zpath = download(name, work_dir)
     agg, dim = aggregate_zip(zpath)
-    stem = Path(name.replace("%20", "")).stem
-    out = processed_dir("radares") / f"{stem}.parquet"
-    agg.to_parquet(out, index=False)
-    dim.to_parquet(processed_dir("radares") / f"{stem}_radars.parquet", index=False)
+    out, out_dim = outputs(month_stem(name))
+    _write_atomic(dim, out_dim)
+    _write_atomic(agg, out)  # the aggregate goes last: its presence marks the month complete
     if not keep_zip:
         zpath.unlink(missing_ok=True)
     return out
