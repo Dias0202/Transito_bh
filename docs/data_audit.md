@@ -53,3 +53,13 @@ Até 2023 a PBH atribuía centenas de sinistros por ano a geocódigos padrão (e
 exato: 24 em 2024, 48 em 2025) e a fração sem coordenada cai de ~10 % para ~3 %. Não há sinal de *novos* pontos
 padrão. Consequência: descontinuidade espacial em 2024. Os estudos antes/depois (`models/enforcement.py`) trazem
 checagens de robustez restritas a um lado da quebra (`twfe_camera_since_2024`, `bumps_same_side_of_2024`).
+
+### Corredores TomTom: revisão das rotas (2026-10-13)
+
+Comparação com rotas do OSRM (servidor público) com os mesmos pontos: Antônio Carlos, Tereza Cristina e Amazonas batem
+(diferença < 1,5 km) — a razão alta contra a linha de referência vinha da linha ter só 2–3 pontos. Problemas reais:
+**Cristiano Machado** (origem numa plataforma da Estação São Gabriel e destino dentro do Complexo da Lagoinha → sentido
+centro 12,9 km vs 8,3 km) e **Via Expressa** (ponto intermediário na Av. Ivaí forçava retorno de 930 m). Corrigidos com
+pontos sobre a própria avenida (`nearest` do OSRM): Cristiano 7,2/7,0 km, Via Expressa 10,6/13,0 km (diferença por mão de
+direção, sem retornos). Séries TomTom desses dois corredores antes de 2026-10-13 não são comparáveis às posteriores.
+BR-040 sentido centro: TomTom 33,6 km vs OSRM 28,1 km — diferença do roteador, sem correção.

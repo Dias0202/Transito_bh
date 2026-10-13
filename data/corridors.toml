@@ -3,8 +3,14 @@
 # `approx = true` were not resolved by Nominatim and were placed manually;
 # validate them on a map (notebooks/01) before trusting route geometry.
 #
-# Budget: 18 corridors x 2 directions = 36 requests/run.
-# ~48 runs/weekday -> ~1,730 req/day, under TomTom free tier (2,500/day).
+# Budget: 18 corridors x 2 directions = 36 requests/run, only on the weekday-peak
+# TomTom cron (every 30 min): worst month 13,248 req vs 20K free (tests/test_budget.py).
+#
+# 2026-10-13 waypoint fixes (checked against OSRM routes, see docs/data_audit.md):
+# cristiano_machado started on a bus-station platform and ended inside the Lagoinha
+# complex (inbound 12.9 km vs outbound 8.3 km); via_expressa used a mid point on
+# Av. Ivai that forced a 930 m U-turn inbound. Both now use points snapped onto the
+# avenue itself (OSRM nearest), which removes the U-turns.
 
 [points]
 lagoinha = [-19.91302, -43.94256]
@@ -28,6 +34,10 @@ eldorado_contagem = [-19.93870, -44.02942]
 betim_centro = [-19.96913, -44.19690]
 vila_da_serra = [-19.98001, -43.94123]
 neves_centro = [-19.76539, -44.08758]
+cristiano_sao_gabriel = [-19.865527, -43.927488]   # on Av. Cristiano Machado (OSRM nearest)
+cristiano_minas_shopping = [-19.874707, -43.927657]
+cristiano_sul = [-19.904581, -43.93544]            # before the Lagoinha complex
+via_expressa_contagem = [-19.938239, -44.02751]    # on Av. Pres. Juscelino Kubitschek (Via Expressa)
 vespasiano_centro = [-19.69228, -43.92014]
 sabara_centro = [-19.89129, -43.81034]
 ibirite_centro = [-20.02325, -44.06007]
@@ -50,7 +60,7 @@ id = "cristiano_machado"
 name = "Av. Cristiano Machado"
 area = "BH"
 regional = "Nordeste"
-path = ["estacao_sao_gabriel", "minas_shopping", "lagoinha"]
+path = ["cristiano_sao_gabriel", "cristiano_minas_shopping", "cristiano_sul"]
 
 [[corridor]]
 id = "amazonas"
@@ -159,10 +169,10 @@ path = ["vespasiano_centro", "estacao_vilarinho"]
 
 [[corridor]]
 id = "via_expressa"
-name = "Via Expressa / Av. Pedro II"
+name = "Via Expressa (Av. Pres. JK) / Tereza Cristina"
 area = "BH/Contagem"
 regional = "Noroeste"
-path = ["eldorado_contagem", "anel_ivai", "lagoinha"]
+path = ["via_expressa_contagem", "lagoinha"]
 
 # HERE Traffic Flow bounding boxes: [west, south, east, north]
 [[bbox]]
