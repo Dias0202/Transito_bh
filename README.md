@@ -8,14 +8,15 @@ Entregas: paper bilíngue (Quarto), site *scrollytelling* e pacote Python reprod
 whom traffic hurts — plus machine-learning solutions validated on real data and in simulation.
 Deliverables: bilingual paper (Quarto), a scrollytelling site and a reproducible Python package.
 
-> Status: fase 1 (fundação + EDA de sinistros). Ver [docs/roadmap.md](docs/roadmap.md).
+> Status: diagnóstico até jul/2026, primeiros modelos (risco, chuva/feriados, radares e redutores). Ver [docs/roadmap.md](docs/roadmap.md).
 
-## Primeiros números · First findings (2020–2024, BHTrans)
+## Primeiros números · First findings (BHTrans/PBH, até jul/2026)
 
-- **36 sinistros com vítima por dia** em 2024 (13.266); **159 mortes**, maior número desde 2014.
-- **75 %** dos sinistros com vítima envolvem uma moto; motociclistas + pedestres = **80 %** das mortes.
-- Picos às **7h e 18h** nos dias úteis; pior hora: **quarta, 18h**.
-- Pampulha tem mais sinistros fatais que qualquer outra regional; hexágono mais crítico sobre a Av. Antônio Carlos.
+- **38 sinistros com vítima por dia** em 2025 (13.887), o maior número desde 2014; 148 sinistros com morte.
+- **75 %** dos sinistros com vítima envolvem uma moto; motociclistas + pedestres = **80 %** das mortes (2020–2024).
+- Picos às **7h e 18h** nos dias úteis; pior hora: **quarta, 18h**. Chuva: **+14 %**; primeira chuva após 3 dias secos: **+19 %** a mais.
+- Pampulha lidera em sinistros e em sinistros fatais (2021–2025); hexágono mais crítico sobre a Av. Antônio Carlos.
+- **Redutores de velocidade: ~21 % menos sinistros** a até 100 m. Radares: sem efeito detectável a 150 m.
 
 ## Estrutura · Layout
 
@@ -31,7 +32,9 @@ src/bhtraffic/
   viz/figures.py       paper figures (PT/EN)
   export/site.py       aggregated JSON for the site
   models/risk.py       crash-risk model (H3 × weekday × hour), baselines, bootstrap, SHAP
-  models/temporal.py   holiday / match / rain effects on hourly crashes (quasi-Poisson GLM)
+  models/temporal.py   holiday / match / rain effects on hourly crashes (Poisson GLM, day-clustered SEs)
+  models/enforcement.py  speed cameras (site x month FE Poisson, Nov 2025 removal) and speed bumps (before/after + placebo)
+  ingest/recentes.py   monthly crash dataset 2016 -> current, enforcement-device history, speed bumps
   analysis/congestion.py  radar speed index vs night free-flow
   ingest/calendar.py, ingest/inmet.py, geo/osm.py   covariates (all free sources)
 data/corridors.toml    18 corridors (BH + RMBH), 4 HERE bboxes
@@ -47,11 +50,23 @@ tests/                 parsers, corridors schema, crash-data fixes
 
 ```bash
 python -m venv .venv && .venv/Scripts/activate          # Windows (source .venv/bin/activate on Linux/macOS)
-pip install -e ".[geo,viz,dev]"
-pytest                                                    # 9 tests
+pip install -e ".[geo,viz,ml,dev]"
+pytest
 python -m bhtraffic.collect.run --dry-run                 # collector on fixtures, no network
-python -c "from bhtraffic.ingest import sinistros; sinistros.build()"   # ~185k crashes -> data/processed
-python -m bhtraffic.export.site                           # site/public/data/*.json
+```
+
+Pipeline, nesta ordem · in this order (all sources free; outputs in `data/processed`, or Drive on Colab):
+
+```bash
+python -c "from bhtraffic.ingest import sinistros; sinistros.build()"   # 1. yearly crash tables 2011-2024 (+ vehicles, people)
+python -m bhtraffic.ingest.recentes                       # 2. monthly crashes 2016 -> now, enforcement history, speed bumps
+python -m bhtraffic.ingest.calendar                       # 3. holidays + Série A matches
+python -m bhtraffic.ingest.inmet 2011 2026                #    hourly rain (INMET A521)
+python -m bhtraffic.geo.osm                               #    OSM road features per H3 cell
+python -m bhtraffic.models.risk                           # 4. models
+python -m bhtraffic.models.temporal
+python -m bhtraffic.models.enforcement
+python -m bhtraffic.export.site                           # 5. site/public/data/*.json
 ```
 
 Site:

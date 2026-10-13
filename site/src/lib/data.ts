@@ -61,7 +61,7 @@ export interface HexCollection {
 }
 
 export interface EffectRow { event: string; irr: number; ci_low: number; ci_high: number }
-export interface Effects { hours: number; crashes: number; matches: number; events: EffectRow[] }
+export interface Effects { hours: number; crashes: number; matches: number; through?: string; events: EffectRow[] }
 
 export interface Risk {
   test_year: number;

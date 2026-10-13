@@ -181,6 +181,13 @@ não se distingue de zero na escala de 150 m; a retirada em massa de nov/2025 ta
 9 meses. Esta última leitura é **frágil**: o estudo de evento rejeita tendências paralelas antes da retirada
 (p = 0,015), e o cadastro mostra onde o equipamento está registrado, não se estava multando.
 
+**Robustez.** (i) Em 2024 a PBH deixou de usar geocódigos padrão (até 2023, centenas de sinistros por ano caíam num
+mesmo ponto do Anel; ver `docs/data_audit.md`). Restrito ao período com geocodificação consistente (2024 em diante),
+o efeito do radar de velocidade fica em ×0,92 [0,83–1,01] (p = 0,07): indício de redução, não significativo.
+Para os redutores, usando só janelas inteiramente de um lado da mudança: ×0,80 [0,72–0,89].
+(ii) O intervalo dos redutores vem de *bootstrap* por projeto operacional (2.168 grupos; sem projeto, agrupados a 200 m),
+porque redutores do mesmo projeto ficam na mesma rua e seus raios se sobrepõem.
+
 **Cautela.** Ausência de efeito detectável não é prova de ausência de efeito: radares agem sobre velocidade em trechos
 longos e sobre gravidade (não só número) dos sinistros, e o raio de 150 m pode não capturar isso. A velocidade medida
 pelos radares da BHTrans (em processamento) permitirá testar o efeito sobre a velocidade diretamente.

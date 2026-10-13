@@ -39,6 +39,9 @@ def load_crashes() -> pd.DataFrame:
     """Crashes 2011 -> last complete month. Vehicle mix and speed limit exist only up to
     2024 (yearly dataset); they are used as *history* features, so a 2025 target is fine."""
     base = processed_dir() / "sinistros"
+    from bhtraffic.ingest.recentes import require_combined
+
+    require_combined()
     o = pd.read_parquet(base / "ocorrencias_2011_2026.parquet")
     old = pd.read_parquet(base / "ocorrencias.parquet", columns=["boletim", "velocidade_permitida"])
     o = o.merge(old, on="boletim", how="left")

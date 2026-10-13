@@ -50,6 +50,9 @@ def _meters(lat1, lon1, lat2, lon2):
 
 def load():
     s = processed_dir("sinistros")
+    from bhtraffic.ingest.recentes import require_combined
+
+    require_combined()
     c = pd.read_parquet(s / "ocorrencias_2011_2026.parquet")
     through = pd.Timestamp((s / "ocorrencias_2011_2026.complete_through.txt").read_text().strip())
     c = c[c["lat"].notna() & ~c["coord_placeholder"] & (c["dt"] <= through + pd.Timedelta(days=1))].copy()
@@ -140,7 +143,27 @@ def removal_event_study(panel: pd.DataFrame, pres: pd.DataFrame):
     }
 
 
-def bumps_before_after(c: pd.DataFrame, bumps: pd.DataFrame, through: pd.Timestamp, reps: int = 1000) -> dict:
+GEOCODE_BREAK = pd.Timestamp("2024-01-01")  # PBH stopped using default geocodes; see docs/data_audit.md
+
+
+def bump_clusters(b: pd.DataFrame, r: float = 200.0) -> np.ndarray:
+    """Resampling unit for the bootstrap: the operational project (bumps of one project sit on
+    one street and their buffers overlap); bumps without a project are grouped within r metres."""
+    from bhtraffic.ingest.recentes import _cluster
+
+    proj = b["projeto"].fillna("").astype(str).str.strip() if "projeto" in b else pd.Series("", index=b.index)
+    out = np.empty(len(b), dtype=object)
+    has = proj.ne("").to_numpy()
+    out[has] = "p_" + proj[has]
+    if (~has).any():
+        nb = b[~has]
+        lab = _cluster(nb["x"].to_numpy(float), nb["y"].to_numpy(float), r)
+        out[~has] = [f"s_{i}" for i in lab]
+    return out
+
+
+def bumps_before_after(c: pd.DataFrame, bumps: pd.DataFrame, through: pd.Timestamp, reps: int = 1000,
+                       avoid_break: bool = False) -> dict:
     """Ratio of ratios after/before installation, plus a placebo one window earlier.
 
     Main:    months [+1, +12]  vs [-12, -1]
@@ -152,7 +175,13 @@ def bumps_before_after(c: pd.DataFrame, bumps: pd.DataFrame, through: pd.Timesta
     b["inst_m"] = b["installed"].dt.to_period("M").dt.to_timestamp()
     first_ok = c["ym"].min() + pd.DateOffset(months=2 * WINDOW)
     last_ok = through.to_period("M").to_timestamp() - pd.DateOffset(months=WINDOW)
-    b = b[b["inst_m"].between(first_ok, last_ok)].reset_index(drop=True)
+    b = b[b["inst_m"].between(first_ok, last_ok)]
+    if avoid_break:
+        # Keep bumps whose whole window (-24..+12 months) sits on one side of the geocoding change.
+        start = b["inst_m"] - pd.DateOffset(months=2 * WINDOW)
+        end = b["inst_m"] + pd.DateOffset(months=WINDOW)
+        b = b[(end < GEOCODE_BREAK) | (start >= GEOCODE_BREAK)]
+    b = b.reset_index(drop=True)
     b["bid"] = b.index
     yy = counts_near(b, c, BUMP_RADIUS_M, "bid").set_index(["bid", "ym"])["y"]
     city = c.groupby("ym").size()
@@ -172,8 +201,12 @@ def bumps_before_after(c: pd.DataFrame, bumps: pd.DataFrame, through: pd.Timesta
 
     rng = np.random.default_rng(0)
     idx = np.arange(len(b))
-    boots = [rng.choice(idx, len(idx)) for _ in range(reps)]
-    out = {"bumps": int(len(b)), "years": [int(b["inst_m"].dt.year.min()), int(b["inst_m"].dt.year.max())],
+    # Cluster bootstrap: resample whole projects / street clusters, not single bumps.
+    cl = bump_clusters(b)
+    groups = pd.Series(idx).groupby(cl).apply(lambda s: s.to_numpy()).to_list()
+    boots = [np.concatenate([groups[g] for g in rng.integers(0, len(groups), len(groups))]) for _ in range(reps)]
+    out = {"bumps": int(len(b)), "clusters": int(len(groups)), "avoid_geocode_break": avoid_break,
+           "years": [int(b["inst_m"].dt.year.min()), int(b["inst_m"].dt.year.max())],
            "crashes": {k: int(v.sum()) for k, v in tot.items()}}
     for name, (a, b_) in {"main": ("post", "pre"), "placebo": ("pre", "pre2")}.items():
         bt = [rr(ix, a, b_) for ix in boots]
@@ -192,10 +225,15 @@ def main() -> None:
         panel, pres = camera_panel(c, sites, sm, through, fam)
         switchers = int((pres.nunique(axis=1) > 1).sum())
         m = fit_twfe(panel)
+        post = panel[panel["ym"] >= GEOCODE_BREAK]
+        m_post = fit_twfe(post) if post.groupby("site")["camera"].nunique().gt(1).any() else None
         res[fam] = {"sites": int(pres.shape[0]), "switching_sites": switchers, "months": int(pres.shape[1]),
-                    "twfe_camera": _irr(m, "camera"), "removal_nov2025": removal_event_study(panel, pres)}
+                    "twfe_camera": _irr(m, "camera"),
+                    "twfe_camera_since_2024": _irr(m_post, "camera") if m_post is not None else None,
+                    "removal_nov2025": removal_event_study(panel, pres)}
         panel.to_parquet(out / f"panel_{fam}.parquet", index=False)
     res["bumps"] = bumps_before_after(c, bumps, through)
+    res["bumps_same_side_of_2024"] = bumps_before_after(c, bumps, through, avoid_break=True)
     (out / "effects.json").write_text(json.dumps(res, indent=2, ensure_ascii=False), "utf-8")
     print(json.dumps(res, indent=2, ensure_ascii=False))
 

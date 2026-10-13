@@ -99,6 +99,14 @@ def combined(old: pd.DataFrame, new: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def require_combined() -> Path:
+    """Path of the combined 2011+ crash table; a clear error if the ingest step was skipped."""
+    p = processed_dir("sinistros") / "ocorrencias_2011_2026.parquet"
+    if not p.exists():
+        raise FileNotFoundError(f"{p} not found: run `python -m bhtraffic.ingest.recentes` first (see README, Pipeline).")
+    return p
+
+
 # ---------------------------------------------------------------- enforcement
 def devices() -> pd.DataFrame:
     """Every device row of every snapshot, with snapshot date, family and lat/lon."""
@@ -172,7 +180,8 @@ def redutores() -> pd.DataFrame:
     x, y = _xy(d["geometria"])
     lat, lon = _latlon(x, y)
     return pd.DataFrame({
-        "id": d["id_redutor_velocidade"], "endereco": d["endereco_referencia"], "bairro": d["bairro"],
+        "id": d["id_redutor_velocidade"], "projeto": d["num_projeto_operacional"],
+        "endereco": d["endereco_referencia"], "bairro": d["bairro"],
         "installed": pd.to_datetime(d["data_implantacao"], errors="coerce"),
         "x": x, "y": y, "lat": lat, "lon": lon,
     })

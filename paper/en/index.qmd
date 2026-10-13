@@ -180,6 +180,13 @@ the 150 m scale; the mass removal of Nov 2025 showed no detectable worsening ove
 **fragile**: the event study rejects parallel pre-trends (p = 0.015), and the registry shows where a device is
 listed, not whether it was issuing fines.
 
+**Robustness.** (i) In 2024 the city stopped using default geocodes (until 2023 hundreds of crashes a year sat on one
+spot of the Anel; see `docs/data_audit.md`). Restricted to the period with consistent geocoding (2024 on), the speed
+camera effect is ×0.92 [0.83–1.01] (p = 0.07): a hint of reduction, not significant. For speed bumps,
+using only windows entirely on one side of the change: ×0.80 [0.72–0.89].
+(ii) The speed-bump interval comes from a bootstrap over operational projects (2,168 groups; bumps without a
+project grouped within 200 m), because bumps of one project sit on one street and their buffers overlap.
+
 **Caution.** No detectable effect is not proof of no effect: cameras act on speed along longer stretches and on crash
 severity (not only counts), and a 150 m radius may miss that. Speeds measured by the BHTrans radars (being processed)
 will allow testing the effect on speed directly.

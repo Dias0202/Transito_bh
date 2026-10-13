@@ -52,6 +52,13 @@ const fxPct = (c: Ctx, id: string) => {
   const e = c.d.effects?.events.find((x) => x.event === id);
   return e ? Math.round((e.irr - 1) * 100) : 0;
 };
+/** End of the hourly model period, e.g. "jul/2026" / "Jul 2026". */
+const period = (c: Ctx) => {
+  const t = c.d.effects?.through;
+  if (!t) return String(c.d.summary.last_year);
+  const d = new Date(`${t}T12:00:00`);
+  return new Intl.DateTimeFormat(c.lang === "pt" ? "pt-BR" : "en-US", { month: "short", year: "numeric" }).format(d).replace(". de ", "/").replace(" de ", "/");
+};
 /** One decimal with a typographic sign: +1,0 / −0,3. */
 const signed = (c: Ctx, x: number) => `${x < 0 ? "−" : "+"}${c.num(Math.abs(x), 1)}`;
 const both = (c: Ctx) => {
@@ -156,7 +163,7 @@ const pt: Dict = {
   "rain.one": () => "hora comum",
   "rain.more": () => "mais sinistros",
   "rain.caption": (c) =>
-    `Razão de taxas contra horas comparáveis (mesmo dia da semana, hora, mês e ano; pandemia controlada), com IC 95%. ${c.num(c.d.effects?.hours ?? 0)} horas, ${c.d.summary.first_year}–${c.d.summary.last_year}. Fontes: BHTrans, INMET (Pampulha), Brasileirão Série A.`,
+    `Razão de taxas contra horas comparáveis (mesmo dia da semana, hora, mês e ano; pandemia controlada), com IC 95%. ${c.num(c.d.effects?.hours ?? 0)} horas, ${c.d.summary.first_year}–${period(c)}. Jogos: 2012–2024. Fontes: BHTrans, INMET (Pampulha), Brasileirão Série A.`,
 
   "risk.eyebrow": () => "Onde concentrar",
   "risk.title": (c) =>
@@ -272,7 +279,7 @@ const en: Dict = {
   "rain.one": () => "typical hour",
   "rain.more": () => "more crashes",
   "rain.caption": (c) =>
-    `Rate ratio against comparable hours (same weekday, hour, month and year; pandemic controlled), with 95% CI. ${c.num(c.d.effects?.hours ?? 0)} hours, ${c.d.summary.first_year}–${c.d.summary.last_year}. Sources: BHTrans, INMET (Pampulha), Brasileirão Série A.`,
+    `Rate ratio against comparable hours (same weekday, hour, month and year; pandemic controlled), with 95% CI. ${c.num(c.d.effects?.hours ?? 0)} hours, ${c.d.summary.first_year}–${period(c)}. Matches: 2012–2024. Sources: BHTrans, INMET (Pampulha), Brasileirão Série A.`,
 
   "risk.eyebrow": () => "Where to focus",
   "risk.title": (c) =>

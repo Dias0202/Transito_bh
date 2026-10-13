@@ -45,3 +45,11 @@
 | `fiscalizacao-eletronica` | 51 retratos mensais, jun/2022 → set/2026 | **IDs não são estáveis** entre retratos → ponto definido espacialmente (mesma família a < 50 m). Alguns retratos de 2022–23 usam **vírgula** como separador e têm BOM; campos de endereço com quebra de linha entre aspas. **Quebra de cadastro entre out/2025 (669 equipamentos) e nov/2025 (163)**, recomposição ao longo de 2026, muitas vezes em outros locais. Cadastro ≠ operação. |
 | `redutor-de-velocidade` | retrato mensal; datas de implantação 2006–2025 | Geometria LINESTRING (usamos o 1º vértice). Algumas linhas sem data de implantação (só manutenção) → fora do antes/depois. |
 | INMET 2025–2026 | horária até ago/2026 | 2026.zip é atualizado ao longo do ano. |
+
+### Quebra de geocodificação em 2024
+
+Até 2023 a PBH atribuía centenas de sinistros por ano a geocódigos padrão (ex.: −19,906; −43,989 no Anel: 305 em
+2019, 406 em 2023; também −19,918; −43,997 e −19,991; −43,962). A partir de 2024 esses pontos desaparecem (maior ponto
+exato: 24 em 2024, 48 em 2025) e a fração sem coordenada cai de ~10 % para ~3 %. Não há sinal de *novos* pontos
+padrão. Consequência: descontinuidade espacial em 2024. Os estudos antes/depois (`models/enforcement.py`) trazem
+checagens de robustez restritas a um lado da quebra (`twfe_camera_since_2024`, `bumps_same_side_of_2024`).

@@ -38,6 +38,9 @@ def _load_combined() -> tuple[pd.DataFrame, str]:
     """Crashes 2011 -> last complete month (ingest.recentes), cut to complete *years*
     for annual metrics; returns (frame, complete_through)."""
     d = processed_dir("sinistros")
+    from bhtraffic.ingest.recentes import require_combined
+
+    require_combined()
     oc = pd.read_parquet(d / "ocorrencias_2011_2026.parquet")
     through = pd.Timestamp((d / "ocorrencias_2011_2026.complete_through.txt").read_text().strip())
     last_full = through.year if through.month == 12 else through.year - 1
@@ -196,6 +199,7 @@ def effects() -> dict | None:
     rows = {e["event"]: e for e in r["city"]}
     return {
         "hours": r["n_hours"], "crashes": r["crashes"], "matches": r["matches_in_frame"],
+        "through": r.get("through"),
         "events": [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in rows[e].items() if k != "p"} for e in keep if e in rows],
     }
 

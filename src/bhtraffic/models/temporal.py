@@ -46,6 +46,9 @@ def _haversine_km(lat1, lon1, lat2, lon2):
 def load_inputs():
     """Crashes 2011 -> last complete month (yearly + monthly datasets, see ingest.recentes)."""
     s = processed_dir("sinistros")
+    from bhtraffic.ingest.recentes import require_combined
+
+    require_combined()
     o = pd.read_parquet(s / "ocorrencias_2011_2026.parquet")
     through = pd.Timestamp((s / "ocorrencias_2011_2026.complete_through.txt").read_text().strip())
     o = o[o["hora_informada"] & o["hour"].notna() & (o["dt"] < through + pd.Timedelta(days=1))].copy()
