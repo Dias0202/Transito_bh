@@ -33,3 +33,6 @@ paper/**/*_files/
 Thumbs.db
 .vscode/
 .idea/
+
+# Local run logs
+*.log
