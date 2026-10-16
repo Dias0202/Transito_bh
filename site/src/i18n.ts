@@ -152,7 +152,10 @@ const pt: Dict = {
   "who.eyebrow": () => "Quem",
   "who.title": (c) => `${c.pct(c.f.motoShare)} dos sinistros com vítima envolvem uma moto.`,
   "who.lead": (c) =>
-    `Das ${c.num(c.d.summary.deaths_recent)} mortes em ${c.f.peopleYears}, motociclistas e pedestres somam ${c.pct(c.f.motoPedShare)}.`,
+    `Das ${c.num(c.d.summary.deaths_recent)} mortes em ${c.f.peopleYears}, motociclistas e pedestres somam ${c.pct(c.f.motoPedShare)}.` +
+    (c.d.exposure
+      ? ` Nos radares da BHTrans, motos são ${c.pct(c.d.exposure.moto_share_of_passages)} das passagens, mas estão em ${c.pct(c.d.exposure.moto_share_of_crashes)} dos sinistros a até ${c.d.exposure.radius_m} m: por passagem, ${c.num(Math.round(c.d.exposure.rate_ratio))} vezes mais (IC ${c.num(Math.round(c.d.exposure.ci_low))}–${c.num(Math.round(c.d.exposure.ci_high))}).`
+      : ""),
   "who.caption": (c) => `Mortes por tipo de usuário da via, ${c.f.peopleYears} (a base com pessoas envolvidas vai até ${c.d.summary.people_window?.[1] ?? c.d.summary.last_year}). Fonte: BHTrans/PBH.`,
 
   "buses.eyebrow": () => "Agora",
@@ -315,7 +318,10 @@ const en: Dict = {
   "who.eyebrow": () => "Who",
   "who.title": (c) => `${c.pct(c.f.motoShare)} of injury crashes involve a motorcycle.`,
   "who.lead": (c) =>
-    `Of the ${c.num(c.d.summary.deaths_recent)} deaths in ${c.f.peopleYears}, motorcyclists and pedestrians account for ${c.pct(c.f.motoPedShare)}.`,
+    `Of the ${c.num(c.d.summary.deaths_recent)} deaths in ${c.f.peopleYears}, motorcyclists and pedestrians account for ${c.pct(c.f.motoPedShare)}.` +
+    (c.d.exposure
+      ? ` At BHTrans radars, motorcycles are ${c.pct(c.d.exposure.moto_share_of_passages)} of passages but are in ${c.pct(c.d.exposure.moto_share_of_crashes)} of crashes within ${c.d.exposure.radius_m} m: per passage, ${c.num(Math.round(c.d.exposure.rate_ratio))} times more (CI ${c.num(Math.round(c.d.exposure.ci_low))}–${c.num(Math.round(c.d.exposure.ci_high))}).`
+      : ""),
   "who.caption": (c) => `Deaths by road user, ${c.f.peopleYears} (the dataset with people involved ends in ${c.d.summary.people_window?.[1] ?? c.d.summary.last_year}). Source: BHTrans/PBH.`,
 
   "buses.eyebrow": () => "Right now",

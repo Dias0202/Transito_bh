@@ -88,6 +88,11 @@ export interface WhatIf {
 export interface CongSite { name: string; where: string; dir: string; lat: number; lon: number; worst: number; worst_hour: number; hours: number; free_flow: number; strip: (number | null)[] }
 export interface Congestion { sites: CongSite[]; sites_total: number; first_day?: string; last_day?: string; days?: number; months?: number }
 
+export interface Exposure {
+  locations: number; location_days: number; radius_m: number; period: [string, string];
+  moto_share_of_passages: number; moto_share_of_crashes: number; rate_ratio: number; ci_low: number; ci_high: number;
+}
+
 export interface Data {
   summary: Summary;
   yearly: YearRow[];
@@ -99,6 +104,7 @@ export interface Data {
   risk: Risk | null;
   whatif: WhatIf | null;
   congestion: Congestion | null;
+  exposure: Exposure | null;
 }
 
 const base = `${import.meta.env.BASE_URL}data/`;
@@ -110,7 +116,7 @@ async function get<T>(name: string): Promise<T> {
 }
 
 export async function loadCore(): Promise<Data> {
-  const [summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif, congestion] = await Promise.all([
+  const [summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif, congestion, exposure] = await Promise.all([
     get<Summary>("summary"),
     get<YearRow[]>("yearly"),
     get<Clock>("clock"),
@@ -122,8 +128,9 @@ export async function loadCore(): Promise<Data> {
     get<Risk>("risk").catch(() => null),
     get<WhatIf>("whatif").catch(() => null),
     get<Congestion>("congestion").catch(() => null),
+    get<Exposure>("exposure").catch(() => null),
   ]);
-  return { summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif, congestion };
+  return { summary, yearly, clock, regionals, vehicles, bus, effects, risk, whatif, congestion, exposure };
 }
 
 // Hexes are the largest file; only fetched when the map scene is near.

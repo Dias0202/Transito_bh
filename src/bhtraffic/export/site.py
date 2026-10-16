@@ -280,6 +280,17 @@ def congestion(top: int = 12) -> dict | None:
     return {"sites": sites, "sites_total": int(len(prof[["id_endereco", "sentido"]].drop_duplicates())), **meta}
 
 
+def exposure() -> dict | None:
+    """Motorcycle vs other involvement per passage at radar sites (analysis.exposure)."""
+    f = processed_dir("analysis") / "exposure.json"
+    if not f.exists():
+        return None
+    e = json.loads(f.read_text("utf-8"))
+    return {k: (round(e[k], 4) if isinstance(e[k], float) else e[k])
+            for k in ("locations", "location_days", "radius_m", "period", "moto_share_of_passages",
+                      "moto_share_of_crashes", "rate_ratio", "ci_low", "ci_high")}
+
+
 def main() -> int:
     o, v, p = _load()
     oc, through = _load_combined()
@@ -291,7 +302,7 @@ def main() -> int:
         _dump("regionals", regionals(oc)),
         _dump("vehicles", vehicles(o, v, p)),
     ]
-    for name, fn in (("effects", effects), ("risk", risk), ("whatif", whatif), ("congestion", congestion)):
+    for name, fn in (("effects", effects), ("risk", risk), ("whatif", whatif), ("congestion", congestion), ("exposure", exposure)):
         obj = fn()
         if obj:
             written.append(_dump(name, obj))
