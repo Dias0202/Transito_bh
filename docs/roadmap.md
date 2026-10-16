@@ -6,12 +6,12 @@ Projeto hobby contínuo: cada fase entrega algo publicável (figura, seção do 
 |---|---|---|---|
 | F1 | Fundação: pacote, coletor, ingestão PBH, EDA de sinistros, site scrollytelling, esqueleto do paper | — | ✅ |
 | F1.5 | Chaves TomTom/HERE + rclone; coletor rodando no cron | ações do usuário | ✅ desde 2026-10-13 (run manual: 36 rotas TomTom, 4.442 segmentos HERE, 2.168 ônibus; job 48 s). HERE bloqueado por custo zero; TomTom só pico 30 min |
-| F2 | Radares BHTrans (contagens por veículo, mar/2021–set/2023): volume, velocidade, mix veicular por corredor × hora — no Colab | Drive (só agregados; ZIP apagado após processar) | 🟡 módulo pronto, ago/2021 processado |
+| F2 | Radares BHTrans (contagens por veículo, mar/2021–set/2023): volume, velocidade, mix veicular por corredor × hora — no Colab | Drive (só agregados; ZIP apagado após processar) | ✅ 31/31 meses (mar/2021–set/2023) em `processed/radares` e no Drive |
 | F2b | Diagnóstico de congestionamento com 4+ semanas do coletor (índice de atraso por corredor × hora, RMBH) | F1.5 | ⏳ |
 | F2c | Ônibus: velocidade comercial e *bunching* por linha com séries do GPS coletado + GTFS | F1.5 | ⏳ |
-| F3 | Risco de sinistro H3 × dia × hora (LightGBM Poisson + SHAP), treino→2023, teste 2024 | F1 | 🟡 v0 e v1 (OSM) empatam com taxa×perfil (bootstrap); top 5% = 23% dos sinistros. Próximo: exposição (radares) |
+| F3 | Risco de sinistro H3 × dia × hora (LightGBM Poisson + SHAP), treino→2023, teste 2024 | F1 | 🟡 v0 e v1 (OSM) empatam com taxa×perfil (bootstrap); top 5% = 23% dos sinistros. Exposição por classe (`analysis/exposure.py`): moto RT 21 [18–25] por passagem |
 | F3b | Efeitos temporais: feriados, jogos (Série A), chuva INMET — GLM quase-Poisson (`models/temporal.py`) | F1 | ✅ chuva +13,6%, 1ª chuva após 72h seco +20% adicional, feriado −31%, jogos sem efeito (310 jogos Série A) |
-| F2d | Congestionamento por radar (índice de velocidade vs fluxo livre noturno) — `analysis/congestion.py` | F2 | 🟡 rodado na amostra ago/2021; refazer com 31 meses após notebook 04 |
+| F2d | Congestionamento por radar (índice de velocidade vs fluxo livre noturno) — `analysis/congestion.py` | F2 | ✅ 31 meses, 89 pontos × sentido: piores Teresa Cristina (9 h < 0,7), Amazonas (0,26 às 8h); cena no site |
 | F2e | Dados até jul/2026: sinistros mensais (2016→), histórico de fiscalização eletrônica (51 retratos, jun/2022→), redutores com data de implantação — `ingest/recentes.py` | — | ✅ |
 | F3c | Efeito de radares e redutores (`models/enforcement.py`): FE Poisson ponto × mês, estudo de evento da retirada de nov/2025, antes/depois de redutores com placebo | F2e | ✅ radar sem efeito detectável (×0,99 [0,90–1,09]); retirada nov/2025 ×1,00 [0,80–1,24] (pré-tendência rejeitada: frágil); redutor ×0,79 [0,72–0,86] líquido do placebo |
 | F9 | **Simulador "e se" de segurança** (`sim/whatif.py`): cenários com efeitos medidos + premissas externas explícitas, incerteza por Monte Carlo sobre os ICs. Cenários: redutores nos N pontos de maior risco; radares de volta; velocidade máxima 60→50 nas arteriais (Nilsson, velocidades reais dos radares); resposta à primeira chuva | F3, F3b, F3c, F2 | ⏳ |

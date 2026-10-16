@@ -2,18 +2,19 @@
 title: "Trânsito em Belo Horizonte: diagnóstico com dados abertos e caminhos com aprendizado de máquina"
 subtitle: "Versão 0.1 — rascunho de trabalho"
 author: "Gabriel Moreira"
-date: 2026-10-13
+date: 2026-10-16
 lang: pt-BR
 abstract: |
   Este estudo reúne dados abertos da Prefeitura de Belo Horizonte (BHTrans) para descrever onde, quando
   e com quem o trânsito da cidade fere, e propõe quatro frentes de aprendizado de máquina — previsão de
   congestionamento, risco de sinistro, semáforos adaptativos e prioridade para ônibus — a serem validadas
-  com dados reais e simulação. Nesta versão, o diagnóstico cobre 2011 a julho de 2026 e inclui os primeiros resultados de modelos:
-  risco de sinistro, efeitos de chuva e feriados, e o efeito de radares e redutores de velocidade.
+  com dados reais e simulação. Nesta versão, o diagnóstico cobre 2011 a agosto de 2026 e inclui os primeiros resultados de modelos:
+  risco de sinistro, efeitos de chuva e feriados, o efeito de radares e redutores de velocidade e, com 31 meses
+  de contagens dos radares da BHTrans, congestionamento e exposição de motociclistas.
 ---
 
 > **Status:** rascunho. Seções marcadas como *planejado* descrevem método, não resultados.
-> Números gerados por `bhtraffic.export.site` e `bhtraffic.viz.figures` em 2026-10-13.
+> Números gerados por `bhtraffic.export.site` e `bhtraffic.viz.figures` em 2026-10-16.
 
 # Introdução
 
@@ -27,10 +28,10 @@ de usuário da via; e (ii) avaliar, com dados reais e simulação, intervençõe
 | Fonte | Período | Uso |
 |---|---|---|
 | Sinistros com vítima — ocorrências, veículos e pessoas [@pbh_sinistros] | 2011–2024 | quem, mix veicular |
-| Sinistros com vítima — base mensal georreferenciada (PBH) | 2016–jul/2026 | diagnóstico, risco, intervenções |
+| Sinistros com vítima — base mensal georreferenciada (PBH) | 2016–ago/2026 | diagnóstico, risco, intervenções |
 | Fiscalização eletrônica — 51 retratos mensais (PBH) | jun/2022–set/2026 | presença de radares por ponto |
 | Redutores de velocidade (PBH) | implantação 2006–2025 | antes/depois |
-| Contagem volumétrica de radares [@pbh_radares] | 2021–2023 | volume, velocidade, mix veicular |
+| Contagem volumétrica de radares [@pbh_radares] | mar/2021–set/2023 (31 meses) | volume, velocidade, mix veicular |
 | GPS dos ônibus em tempo real (PBH) | coleta própria | velocidade comercial |
 | TomTom Routing | coleta própria (cota grátis) | tempo de viagem por corredor |
 | OpenStreetMap; grade H3 res. 8 [@h3] | snapshot 2026 | malha viária, agregação espacial |
@@ -74,23 +75,28 @@ quanto em sinistros com morte (111, contra 54 da Centro-Sul). O hexágono mais c
 **75 % dos sinistros com vítima envolvem ao menos uma motocicleta.** Das 638 mortes em 2020–2024,
 motociclistas (48 %) e pedestres (32 %) somam 80 % (@fig-users).
 
-**Exposição (preliminar).** Na primeira amostra dos radares da BHTrans — 10 dias de agosto de 2021, 88 pontos,
-12,4 milhões de veículos detectados — motos são **12,5 %** do fluxo. A desproporção entre presença no tráfego e
-presença nos sinistros com vítima é o ponto de partida do modelo de risco. Ressalvas: amostra curta, e a classificação
-dos radares pode subcontar motos que trafegam entre faixas.
+**Exposição.** Nos 31 meses de radares da BHTrans (mar/2021–set/2023), em 80 pontos com contagem por classe
+(70.516 ponto-dias; 1,92 bilhão de passagens), motos são **13,2 %** das passagens, mas estão em **76,6 %** dos
+sinistros com vítima a até 100 m desses pontos nos mesmos dias. Por milhão de passagens, são 3,75 sinistros com moto
+contra 0,17 sem moto: **razão de taxas de 21** (IC 95 % 18–25, *bootstrap* por ponto). É uma comparação de exposição
+por área, não de risco por viagem: um sinistro perto do radar pode envolver veículos que não passaram por ele, e a
+classificação dos radares pode subcontar motos que trafegam entre faixas (o que inflaria a razão).
 
-# Congestionamento nos radares (preliminar)
+# Congestionamento nos radares
 
 Para cada radar da BHTrans, a velocidade de fluxo livre é a mediana da velocidade média dos carros entre 0h e 5h;
 o **índice de velocidade** é a velocidade de cada hora dividida por ela (1 = livre; < 0,7 = congestionado).
-Na amostra disponível — **10 dias de agosto de 2021, 88 radares**, ainda sob efeito da pandemia — os piores pontos em
-dia útil são a Av. Cristiano Machado junto ao Viaduto Paulo Mendes Campos (índice 0,36 às 17h), a Av. Raja Gabaglia
-(0,31 às 18h), a Av. Teresa Cristina (0,39 às 17h) e, no pico da manhã, Andradas, Amazonas e Antônio Carlos.
-Estes números serão refeitos com os 31 meses de radares (mar/2021–set/2023) e não devem ser lidos como ranking final.
+Com os **31 meses de radares (mar/2021–set/2023; 917 dias, 89 pontos × sentido)**, ordenando os pontos pelo número
+de horas de dia útil com índice < 0,7, os mais travados são: Av. Teresa Cristina (n.º 888, sentido Centro; **9 horas**
+congestionadas, pior 0,44 às 8h), Av. Amazonas (n.º 3.984, sentido Centro; pior índice da cidade, **0,26 às 8h**),
+Av. Cristiano Machado (n.º 12.001, sentido Centro; 0,59 às 18h), Av. Nossa Senhora do Carmo (0,37 às 8h) e
+Av. do Contorno (0,49 às 17h). No sentido bairro, a Av. Cristiano Machado junto ao Viaduto Paulo Mendes Campos cai
+para 0,34 às 17h. Os radares cobrem só os pontos onde há equipamento da BHTrans — não é um mapa da cidade inteira —,
+e 2021 ainda tem efeito da pandemia.
 
 # Quando o risco muda: feriados, jogos e chuva
 
-**Desenho.** Uma linha por hora de 2011 a julho de 2026 (136.584 horas. 205.994 sinistros com hora informada).
+**Desenho.** Uma linha por hora de 2011 a agosto de 2026 (137.328 horas, 207.248 sinistros com hora informada).
 GLM de Poisson (erros-padrão agrupados por dia, robustos a sobredispersão) com efeitos fixos de dia da semana × hora (168), mês, ano e período de restrições da pandemia
 (18/03/2020–30/06/2021). Cada coeficiente é uma **razão de taxas** (RT) contra horas comparáveis sem o evento.
 Feriados nacionais, de MG e municipais de BH; jogos da Série A nos estádios de BH (2012–2024, 310 partidas, 19 clássicos;
@@ -108,7 +114,7 @@ janela de 2 h antes a 3 h depois do início); chuva horária da estação INMET 
   de jogo; Arena MRV, aberta em 2023, ainda sem dados suficientes).
 
 **Cautela.** Menos sinistros em feriados reflete sobretudo **menos tráfego**, não ruas mais seguras por veículo;
-o volume dos radares permitirá separar exposição de risco. A base de jogos cobre só a Série A: Mineiro, Copa do Brasil,
+o volume dos radares separa exposição de risco por classe de veículo (seção *Quem*), mas ainda não por hora. A base de jogos cobre só a Série A: Mineiro, Copa do Brasil,
 Libertadores e Série B (Cruzeiro em 2020–2022) ficam de fora, o que dilui um eventual efeito.
 
 # Risco de sinistro
@@ -125,8 +131,8 @@ mesmo célula-horário; (b) taxa anual da célula × perfil horário da cidade.
 
 | 2025 (teste) | Top 1 % | Top 5 % | Top 10 % | Deviance de Poisson |
 |---|---|---|---|---|
-| LightGBM v1 (histórico + OSM) | 6,9 % | 23,2 % | 37,4 % | 0,522 |
-| LightGBM v0 (histórico) | 6,8 % | 23,1 % | 37,5 % | 0,523 |
+| LightGBM v1 (histórico + OSM) | 6,9 % | 23,3 % | 37,6 % | 0,522 |
+| LightGBM v0 (histórico) | 6,8 % | 23,2 % | 37,5 % | 0,523 |
 | Taxa da célula × perfil horário | 6,8 % | 22,7 % | 37,1 % | 0,537 |
 | Média 3 anos do célula-horário | 5,2 % | 17,7 % | 28,8 % | 3,29¹ |
 
@@ -154,7 +160,7 @@ e de intervenções medidas (próxima seção), não de um modelo maior.
 de 669 para 163 equipamentos (radares de velocidade: 142 → 66) e se recompôs ao longo de 2026, muitas vezes em outros
 locais — padrão compatível com troca de contrato, não confirmada aqui.
 
-**Desenho (fixado antes dos resultados).** Radares: painel ponto × mês (jun/2022–jul/2026), desfecho = sinistros com
+**Desenho (fixado antes dos resultados).** Radares: painel ponto × mês (jun/2022–ago/2026), desfecho = sinistros com
 vítima a até 150 m; Poisson com efeito fixo de ponto e de mês (absorve chuva, feriados, tendência da cidade), erros
 agrupados por ponto; o efeito vem dos pontos que ganharam ou perderam equipamento. Estudo de evento da retirada de
 nov/2025 (pontos que perderam o radar × pontos que o mantiveram). Redutores: sinistros a até 100 m nos 12 meses depois
@@ -165,63 +171,70 @@ nov/2025 (pontos que perderam o radar × pontos que o mantiveram). Redutores: si
 
 | Intervenção | Pontos | Efeito (IC 95 %) |
 |---|---|---|
-| Radar de velocidade presente | 144 (116 mudaram) | ×0,99 [0,90–1,09] |
-| Retirada de radares em nov/2025 (DiD) | 72 perderam × 29 mantiveram | ×1,00 [0,80–1,24] |
+| Radar de velocidade presente | 144 (116 mudaram) | ×1,00 [0,92–1,10] |
+| Retirada de radares em nov/2025 (DiD) | 72 perderam × 29 mantiveram | ×0,99 [0,80–1,22] |
 | Detector de avanço de sinal presente | 123 | ×1,05 [0,97–1,14] |
-| Redutor: depois × antes | 2.618 (2013–2025) | ×0,82 [0,77–0,87] |
+| Redutor: depois × antes | 2.627 (2013–2025) | ×0,82 [0,78–0,87] |
 | Redutor: placebo (antes × mais antes) | | ×1,04 [0,99–1,09] |
-| **Redutor, líquido do placebo** | | **×0,79 [0,72–0,86]** |
+| **Redutor, líquido do placebo** | | **×0,79 [0,72–0,87]** |
 
-: Efeito sobre sinistros com vítima nas proximidades (radares 150 m; redutores 100 m), jun/2022–jul/2026 (radares) e 2012–jul/2026 (redutores). {#tbl-enf}
+: Efeito sobre sinistros com vítima nas proximidades (radares 150 m; redutores 100 m), jun/2022–ago/2026 (radares) e 2012–ago/2026 (redutores). {#tbl-enf}
 
 **Resultado.** Os **redutores de velocidade** estão associados a **cerca de 21 % menos sinistros com vítima** a até
 100 m (@fig-interventions), e o placebo mostra só um aumento pequeno e não significativo antes da instalação — a
 queda não é explicada por volta à média. Para **radares de velocidade** e **detectores de avanço de sinal**, o efeito
 não se distingue de zero na escala de 150 m; a retirada em massa de nov/2025 também não mostrou piora detectável em
-9 meses. Esta última leitura é **frágil**: o estudo de evento rejeita tendências paralelas antes da retirada
-(p = 0,015), e o cadastro mostra onde o equipamento está registrado, não se estava multando.
+10 meses. Esta última leitura é **frágil**: o estudo de evento rejeita tendências paralelas antes da retirada
+(p = 0,005), e o cadastro mostra onde o equipamento está registrado, não se estava multando.
 
 **Robustez.** (i) Em 2024 a PBH deixou de usar geocódigos padrão (até 2023, centenas de sinistros por ano caíam num
 mesmo ponto do Anel; ver `docs/data_audit.md`). Restrito ao período com geocodificação consistente (2024 em diante),
-o efeito do radar de velocidade fica em ×0,92 [0,83–1,01] (p = 0,07): indício de redução, não significativo.
+o efeito do radar de velocidade fica em ×0,92 [0,84–1,01] (p = 0,09): indício de redução, não significativo.
 Para os redutores, usando só janelas inteiramente de um lado da mudança: ×0,80 [0,72–0,89].
-(ii) O intervalo dos redutores vem de *bootstrap* por projeto operacional (2.168 grupos; sem projeto, agrupados a 200 m),
+(ii) O intervalo dos redutores vem de *bootstrap* por projeto operacional (2.176 grupos; sem projeto, agrupados a 200 m),
 porque redutores do mesmo projeto ficam na mesma rua e seus raios se sobrepõem.
 
 **Cautela.** Ausência de efeito detectável não é prova de ausência de efeito: radares agem sobre velocidade em trechos
-longos e sobre gravidade (não só número) dos sinistros, e o raio de 150 m pode não capturar isso. A velocidade medida
-pelos radares da BHTrans (em processamento) permitirá testar o efeito sobre a velocidade diretamente.
+longos e sobre gravidade (não só número) dos sinistros, e o raio de 150 m pode não capturar isso. As contagens da
+BHTrans terminam em set/2023, antes da retirada de nov/2025, e não permitem medir o efeito dos equipamentos sobre a
+velocidade; servem como linha de base de velocidade (cenário abaixo).
 
 # Cenários "e se" de segurança
 
 **Regras.** Cada cenário usa um efeito **medido** neste estudo (com IC) ou uma **premissa** explícita; a incerteza é
 propagada por Monte Carlo (5.000 sorteios: efeito log-normal ajustado ao IC 95 %, linha de base Poisson) e
-reportada como intervalo de 90 %. Linha de base: sinistros de 2024-08-01 a 2026-07-31 (período com
+reportada como intervalo de 90 %. Linha de base: sinistros de 2024-09-01 a 2026-08-31 (período com
 geocodificação consistente), anualizados. O site traz a versão interativa.
 
 **Redutores nos pontos de maior sinistralidade.** Só onde o efeito foi medido: ≥ 90 % dos sinistros a até 100 m em
-ruas locais (os redutores medidos estão 94 % em vias residenciais ou terciárias) e taxa ≤ 7.3
+ruas locais (os redutores medidos estão 94 % em vias residenciais ou terciárias) e taxa ≤ 7,2
 sinistros/ano (99º percentil em volta dos redutores medidos); sem redutor existente a 100 m; pontos a ≥ 200 m entre si.
 
 | Cenário | Sinistros/ano a até 100 m (hoje) | Evitados/ano, mediana (90 %) |
 |---|---|---|
 | 10 redutores | 70 | 14 (9–20) |
-| 50 redutores | 318 | 66 (45–86) |
-| 100 redutores | 564 | 117 (80–151) |
-| 200 redutores | 942 | 196 (134–252) |
-| 500 redutores | 1.646 | 343 (235–441) |
+| 50 redutores | 320 | 66 (45–87) |
+| 100 redutores | 571 | 118 (81–153) |
+| 200 redutores | 952 | 198 (135–254) |
+| 500 redutores | 1.661 | 347 (236–444) |
 
-: Efeito aplicado: ×0.79 [0.72–0.87] (redutor, líquido do placebo). {#tbl-whatif}
+: Efeito aplicado: ×0,79 [0,72–0,87] (redutor, líquido do placebo). {#tbl-whatif}
 
-**Radares de volta nos 42 pontos ainda sem equipamento** (retirados em nov/2025): 452
-sinistros/ano a até 150 m. Com o efeito do período todo, evitados 3 (-32–38) —
-a faixa inclui zero; com o efeito desde 2024, 37 (3–69), ainda sem
-significância a 95 %. **Não há base para prometer resultado.**
+**Radares de volta nos 37 pontos ainda sem equipamento** (retirados em nov/2025): 370
+sinistros/ano a até 150 m. Com o efeito do período todo, evitados −1 (−30 a 26) —
+a faixa inclui zero; com o efeito desde 2024, 28 (1–53): a faixa de 90 % fica acima de zero, mas o efeito em si
+não é significativo a 95 % (p = 0,09). **Não há base para prometer resultado.**
 
 **Primeira chuva após 72 h secos.** ~18 horas/ano, com ~45
 sinistros; o excesso atribuível a ser a primeira chuva é 7 (4–11) sinistros/ano, e o
-excesso de toda hora com chuva (~402 h/ano) é 81 (66–96). Uma ação
+excesso de toda hora com chuva (~406 h/ano) é 82 (67–97). Uma ação
 (alerta, fiscalização, limpeza de pista) que elimine uma fração *p* desse excesso evita *p* × esse número — *p* é premissa.
+
+**Velocidade média nas avenidas com radar.** Nos 80 pontos com velocidade medida (média ponderada 44 km/h), há
+463 sinistros/ano a até 100 m. Supondo que os sinistros respondam à velocidade média pelo *Power Model*
+[@nilsson2004power] — razão = (v₁/v₀)^k^, com *k* sorteado entre 1,5 e 2,5 (**premissa**, não medida aqui) —, reduzir a
+velocidade média dos carros em 1 km/h evitaria 21 (16–26) sinistros/ano; em 5 km/h, 100 (78–122); em 10 km/h,
+186 (152–223). A velocidade é medida; a resposta dos sinistros e o meio de obter a redução não são.
 
 **Leitura.** Redutores em ruas locais são a alavanca com efeito medido; ganhos maiores exigiriam atuar nas vias
 arteriais, onde o efeito de redutores **não** foi medido e onde entram os cenários de infraestrutura (SUMO, F10).
@@ -255,7 +268,7 @@ política em BH, alimentada pela Pesquisa Origem-Destino da RMBH.
 
 - A base cobre apenas sinistros **com vítima**.
 - 14,6 % dos sinistros não têm coordenada válida; ficam fora do mapa, mas contam nos totais.
-- As contagens de radares terminam em set/2023 e têm meses incompletos.
+- As contagens de radares terminam em set/2023, têm meses incompletos (ex.: ago/2021 com 10 dias) e cobrem só os pontos com equipamento da BHTrans.
 - Os dados de tempo de viagem dependem da coleta própria, iniciada em 2026; 5 dos 18 corredores TomTom têm rota
   1,7–2,2× a linha de referência (possível desvio do eixo) e estão em revisão.
 - Variáveis do OSM são de 2026, aplicadas a sinistros de 2011–2025.
