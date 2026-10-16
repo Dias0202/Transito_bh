@@ -69,8 +69,11 @@ def build() -> pd.DataFrame:
     inter = n[n["street_count"] >= 3].groupby("h3").size().rename("intersections")
 
     # Point features.
-    pts = ox.features_from_place(PLACE, POINT_TAGS)
-    pts = pts[pts.geometry.notna()]
+    # osmnx 2 repeats the full city polygon once per tag in the Overpass query, which
+    # gets a 413; query a simplified envelope and clip back to the exact boundary.
+    city = ox.geocode_to_gdf(PLACE).geometry.iloc[0]
+    pts = ox.features_from_polygon(city.buffer(0.005).simplify(0.002), POINT_TAGS)
+    pts = pts[pts.geometry.notna() & pts.geometry.intersects(city)]
     c = pts.geometry.representative_point()
     hw = pts["highway"].astype("string") if "highway" in pts else pd.Series(pd.NA, index=pts.index, dtype="string")
     kind = hw.where(hw.isin(POINT_TAGS["highway"]).fillna(False).astype(bool), pd.NA)

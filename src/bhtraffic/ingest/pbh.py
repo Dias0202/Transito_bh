@@ -12,11 +12,13 @@ from __future__ import annotations
 
 import io
 import re
+import ssl
 import unicodedata
 from pathlib import Path
 
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
 
 from bhtraffic.config import HTTP_USER_AGENT, processed_dir, raw_dir
 
@@ -40,8 +42,18 @@ DATASETS = {
 # Datasets published as one snapshot per month: only the latest is needed.
 LATEST_ONLY = {"ponto_onibus", "sinistros_mensal", "redutores"}
 
+
+class _DefaultTLSAdapter(HTTPAdapter):
+    # The WAF also fingerprints TLS: urllib3 >= 2 offers a trimmed cipher list
+    # that gets a 403, while the stdlib default context (same as urllib/curl) passes.
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["ssl_context"] = ssl.create_default_context()
+        return super().init_poolmanager(*args, **kwargs)
+
+
 _session = requests.Session()
 _session.headers["User-Agent"] = HTTP_USER_AGENT
+_session.mount("https://", _DefaultTLSAdapter())
 
 
 def package(dataset_key: str) -> dict:
