@@ -1,0 +1,12 @@
+# Top-level dependencies needed to run the test suite (CI).
+# Compile with:
+#   uv pip compile requirements/ci.in --universal --python-version 3.11 -o requirements/ci.txt
+numpy
+pandas
+pyarrow
+requests
+h3
+pyproj
+statsmodels
+holidays
+pytest
