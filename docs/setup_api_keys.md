@@ -1,6 +1,6 @@
 # Chaves de API — TomTom (HERE bloqueado)
 
-> **Custo zero é mandatório** ([CLAUDE.md](../CLAUDE.md)). Nada aqui pode gerar cobrança.
+> **Custo zero é mandatório** (`src/bhtraffic/collect/budget.py`, `tests/test_budget.py`). Nada aqui pode gerar cobrança.
 
 O coletor (`.github/workflows/collector.yml`) lê a chave TomTom dos *secrets* do repositório.
 Sem ela ele roda mesmo assim, coletando só as posições dos ônibus (que não exigem chave).

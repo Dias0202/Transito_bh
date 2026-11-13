@@ -36,3 +36,7 @@ Thumbs.db
 
 # Local run logs
 *.log
+
+# Local working notes (not part of the project)
+CLAUDE.md
+RETOMAR.md
