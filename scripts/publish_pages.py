@@ -23,7 +23,11 @@ WORK = ROOT / "out" / "pages_repo"
 REMOTE = "https://github.com/Dias0202/transito-bh.git"
 NAME, EMAIL = "Gabriel Dias Moreira", "98992689+Dias0202@users.noreply.github.com"
 KEEP = {".git", "README.md", "LICENSE", ".nojekyll"}
-FORBIDDEN = ("claude", "anthropic")
+# Extra terms that must never reach the public site (comma-separated, case-insensitive),
+# kept out of the repository: PUBLISH_FORBIDDEN_TERMS="term1,term2".
+FORBIDDEN = ("claude", "anthropic") + tuple(
+    t.strip().lower() for t in os.environ.get("PUBLISH_FORBIDDEN_TERMS", "").split(",") if t.strip()
+)
 
 
 def git(*args: str, cwd: Path = WORK, token: str | None = None) -> str:
