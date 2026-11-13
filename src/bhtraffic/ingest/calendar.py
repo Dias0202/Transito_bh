@@ -33,10 +33,15 @@ MUNICIPAL = {(8, 15): "Assunção de Nossa Senhora (BH)", (12, 8): "Imaculada Co
 def holidays_table(years: range) -> pd.DataFrame:
     import holidays
 
+    # Names are matched below ("Carnaval", "Corpus Christi"), so the language is pinned:
+    # without it the package localizes by LANG and returns "Carnival" on English locales.
+    lang = "pt_BR"
     rows = []
     for y in years:
-        public = holidays.country_holidays("BR", subdiv="MG", years=y)
-        optional = holidays.country_holidays("BR", subdiv="MG", years=y, categories=("optional",))
+        public = holidays.country_holidays("BR", subdiv="MG", years=y, language=lang)
+        optional = holidays.country_holidays(
+            "BR", subdiv="MG", years=y, categories=("optional",), language=lang
+        )
         for d, name in public.items():
             rows.append({"date": d, "name": name, "kind": "public"})
         for d, name in optional.items():
